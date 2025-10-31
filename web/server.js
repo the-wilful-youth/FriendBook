@@ -216,9 +216,10 @@ app.post('/api/accept-request', (req, res) => {
 
 function findAvailablePort(startPort) {
     return new Promise((resolve) => {
-        const server = app.listen(startPort, () => {
+        const server = app.listen(startPort, '0.0.0.0', () => {
             const port = server.address().port;
             console.log(`🚀 FriendBook server running on http://localhost:${port}`);
+            console.log(`🌐 Network access: http://YOUR_IP:${port}`);
             resolve(server);
         }).on('error', (err) => {
             if (err.code === 'EADDRINUSE') {
