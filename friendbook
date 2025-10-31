@@ -1,0 +1,18 @@
+#!/bin/bash
+case "$1" in
+    "cli"|"")
+        make run-cli
+        ;;
+    "web")
+        make run-web
+        ;;
+    "build")
+        make all
+        ;;
+    "clean")
+        make clean-all
+        ;;
+    *)
+        echo "Usage: ./friendbook [cli|web|build|clean]"
+        ;;
+esac

@@ -8,15 +8,12 @@
 #include "friend_request.h"
 #include "hashtable.h"
 #include "suggestions.h"
-
 #define USERS_FILE "data/users.csv"
 #define FRIENDS_FILE "data/friendships.csv"
 #define REQS_FILE "data/requests.csv"
-
 static void clearScreen() {
     printf("\033[2J\033[H");
 }
-
 static void printHeader() {
     printf("\033[1;36m");
     printf("╔══════════════════════════════════════════════════════════╗\n");
@@ -24,27 +21,29 @@ static void printHeader() {
     printf("║                 Mini Social Network                      ║\n");
     printf("╚══════════════════════════════════════════════════════════╝\033[0m\n");
 }
-
 static void autoSave(User* users, Graph* g, FRQueue* q) {
     saveUsers(USERS_FILE, users);
     saveFriendships(FRIENDS_FILE, g);
-    saveRequests(REQS_FILE, q);
+    saveRequests(REQS_FILE, q->front);
+    syncToDatabase(users, g, q->front);
 }
-
-static void menu(const char* currentUser) {
+static void menu(User* currentUser) {
     clearScreen();
     printHeader();
-    
     if (currentUser) {
-        printf("\n\033[1;32mLogged in as: %s\033[0m\n", currentUser);
+        printf("\n\033[1;32mLogged in as: %s %s%s\033[0m\n", 
+               currentUser->firstName, currentUser->lastName,
+               currentUser->isAdmin ? " (Admin)" : "");
         printf("\n\033[1;34mMENU OPTIONS:\033[0m\n");
         printf("┌─────────────────────────────────────────────────────────┐\n");
-        printf("│ \033[1;33m1.\033[0m  Display all users                          │\n");
-        printf("│ \033[1;33m2.\033[0m  Send friend request                        │\n");
-        printf("│ \033[1;33m3.\033[0m  View & accept friend requests              │\n");
-        printf("│ \033[1;33m4.\033[0m  Show my friends                            │\n");
-        printf("│ \033[1;33m5.\033[0m  Get friend suggestions                     │\n");
-        printf("│ \033[1;33m6.\033[0m  Remove friendship                          │\n");
+        printf("│ \033[1;33m1.\033[0m  Send friend request                        │\n");
+        printf("│ \033[1;33m2.\033[0m  View & accept friend requests              │\n");
+        printf("│ \033[1;33m3.\033[0m  Show my friends                            │\n");
+        printf("│ \033[1;33m4.\033[0m  Get friend suggestions                     │\n");
+        printf("│ \033[1;33m5.\033[0m  Remove friendship                          │\n");
+        if (currentUser->isAdmin) {
+            printf("│ \033[1;35m8.\033[0m  Admin Dashboard                            │\n");
+        }
         printf("│ \033[1;33m7.\033[0m  Logout                                     │\n");
         printf("│ \033[1;31m0.\033[0m  Exit application                           │\n");
         printf("└─────────────────────────────────────────────────────────┘\n");
@@ -57,42 +56,40 @@ static void menu(const char* currentUser) {
         printf("│ \033[1;31m0.\033[0m  Exit application                           │\n");
         printf("└─────────────────────────────────────────────────────────┘\n");
     }
-    
     printf("\n\033[1;36mEnter your choice: \033[0m");
 }
-
 int main() {
     User* users = NULL;
     int userCount = 0;
     Graph* g = createGraph(MAX_USERS);
     FRQueue q; fr_init(&q);
     HashTable* ht = createHashTable();
-
+    if (!initDatabase()) {
+        printf("Failed to initialize database!\n");
+        return 1;
+    }
     loadUsers(USERS_FILE, &users, &userCount);
+    createDefaultAdmin(&users, &userCount);
     buildHashTable(ht, users);
-    loadFriendships(FRIENDS_FILE, g, users);
-    loadRequests(REQS_FILE, &q, users);
-
+    loadFriendships(FRIENDS_FILE, g, userCount);
+    loadRequests(REQS_FILE, &q.front);
+    syncToDatabase(users, g, q.front);
     int loggedId = -1;
     char username[MAX_NAME], firstName[MAX_NAME], lastName[MAX_NAME], pass[MAX_PASS];
-    const char* currentUser = NULL;
-
+    User* currentUser = NULL;
     for(;;) {
         menu(currentUser);
         int choice; 
         if (scanf("%d", &choice)!=1) break;
-        
         if (choice==0) {
             autoSave(users, g, &q);
             printf("\n\033[1;32mData saved successfully!\033[0m\n");
             printf("\033[1;33mThank you for using FriendBook! Goodbye!\033[0m\n");
             break;
         }
-        
         switch(choice) {
             case 1:
                 if (!currentUser) {
-                    // Register
                     printf("\n\033[1;34mUSER REGISTRATION\033[0m\n");
                     printf("─────────────────────\n");
                     printf("Username: "); scanf("%49s", username);
@@ -109,18 +106,24 @@ int main() {
                     printf("\nPress Enter to continue...");
                     getchar(); getchar();
                 } else {
-                    // Display users
-                    printf("\n\033[1;34mALL USERS\033[0m\n");
-                    printf("────────────\n");
-                    displayUsers(users);
+                    printf("\n\033[1;34mSEND FRIEND REQUEST\033[0m\n");
+                    printf("──────────────────────\n");
+                    printf("Enter username: "); scanf("%49s", username);
+                    User* target = hashFind(ht, username);
+                    if (target && target->id != loggedId) {
+                        fr_send(&q, loggedId, target->id, users);
+                        autoSave(users, g, &q);
+                    } else if (target && target->id == loggedId) {
+                        printf("You cannot send a friend request to yourself.\n");
+                    } else {
+                        printf("User not found.\n");
+                    }
                     printf("\nPress Enter to continue...");
                     getchar(); getchar();
                 }
                 break;
-                
             case 2: 
                 if (!currentUser) {
-                    // Login
                     printf("\n\033[1;34mUSER LOGIN\033[0m\n");
                     printf("─────────────\n");
                     printf("Username: "); scanf("%49s", username);
@@ -128,8 +131,9 @@ int main() {
                     User* u = hashFind(ht, username);
                     if (u && strcmp(u->password, pass) == 0) {
                         loggedId = u->id;
-                        currentUser = getUserDisplayName(users, u->id);
-                        printf("\n\033[1;32mWelcome back, %s!\033[0m\n", currentUser);
+                        currentUser = u;
+                        printf("\n\033[1;32mWelcome back, %s %s!%s\033[0m\n", 
+                               u->firstName, u->lastName, u->isAdmin ? " (Admin)" : "");
                     } else {
                         loggedId = -1;
                         currentUser = NULL;
@@ -138,7 +142,6 @@ int main() {
                     printf("\nPress Enter to continue...");
                     getchar(); getchar();
                 } else {
-                    // Send friend request
                     printf("\n\033[1;34mSEND FRIEND REQUEST\033[0m\n");
                     printf("──────────────────────\n");
                     printf("Send request to username: "); scanf("%49s", username);
@@ -160,7 +163,6 @@ int main() {
                     getchar(); getchar();
                 }
                 break;
-            
             case 3:
                 if (currentUser) {
                     printf("\n\033[1;34mFRIEND REQUESTS\033[0m\n");
@@ -185,7 +187,6 @@ int main() {
                     getchar(); getchar();
                 }
                 break;
-            
             case 4:
                 if (currentUser) {
                     printf("\n\033[1;34mMY FRIENDS\033[0m\n");
@@ -195,7 +196,6 @@ int main() {
                     getchar(); getchar();
                 }
                 break;
-                
             case 5:
                 if (currentUser) {
                     printf("\n\033[1;34mFRIEND SUGGESTIONS\033[0m\n");
@@ -205,7 +205,6 @@ int main() {
                     getchar(); getchar();
                 }
                 break;
-                
             case 6:
                 if (currentUser) {
                     printf("\n\033[1;34mREMOVE FRIENDSHIP\033[0m\n");
@@ -219,7 +218,6 @@ int main() {
                     getchar(); getchar();
                 }
                 break;
-                
             case 7:
                 if (currentUser) {
                     loggedId = -1;
@@ -229,15 +227,25 @@ int main() {
                     getchar(); getchar();
                 }
                 break;
-                
+            case 8:
+                if (currentUser && currentUser->isAdmin) {
+                    adminDashboard(users, &userCount);
+                    buildHashTable(ht, users);
+                    autoSave(users, g, &q);
+                    if (userCount == 0) {
+                        currentUser = NULL;
+                        loggedId = -1;
+                    }
+                }
+                break;
             default:
                 printf("\n\033[1;31mInvalid choice! Please try again.\033[0m\n");
                 printf("\nPress Enter to continue...");
                 getchar(); getchar();
         }
     }
-    
     freeHashTable(ht);
     freeGraph(g);
+    closeDatabase();
     return 0;
 }

@@ -2,20 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hashtable.h"
-
 static unsigned int hash(const char* str) {
     unsigned int hash = 5381;
     while (*str) hash = ((hash << 5) + hash) + *str++;
     return hash % HASH_SIZE;
 }
-
 HashTable* createHashTable() {
     HashTable* ht = malloc(sizeof(HashTable));
     if (!ht) { fprintf(stderr, "malloc failed\n"); exit(1); }
     for (int i = 0; i < HASH_SIZE; i++) ht->buckets[i] = NULL;
     return ht;
 }
-
 void freeHashTable(HashTable* ht) {
     if (!ht) return;
     for (int i = 0; i < HASH_SIZE; i++) {
@@ -28,7 +25,6 @@ void freeHashTable(HashTable* ht) {
     }
     free(ht);
 }
-
 void hashInsert(HashTable* ht, User* user) {
     if (!ht || !user) return;
     unsigned int idx = hash(user->username);
@@ -38,7 +34,6 @@ void hashInsert(HashTable* ht, User* user) {
     node->next = ht->buckets[idx];
     ht->buckets[idx] = node;
 }
-
 User* hashFind(HashTable* ht, const char* username) {
     if (!ht || !username) return NULL;
     unsigned int idx = hash(username);
@@ -49,8 +44,16 @@ User* hashFind(HashTable* ht, const char* username) {
     }
     return NULL;
 }
-
 void buildHashTable(HashTable* ht, User* users) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* cur = ht->buckets[i];
+        while (cur) {
+            HashNode* next = cur->next;
+            free(cur);
+            cur = next;
+        }
+        ht->buckets[i] = NULL;
+    }
     User* cur = users;
     while (cur) {
         hashInsert(ht, cur);
