@@ -1,0 +1,421 @@
+# Global / OS
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+.vagrant/
+# Windows image file caches
+Thumbs.db:encryptable
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.sql.gz
+
+# Temporary and backup files
+*.tmp
+*.temp
+*.swp
+*~
+*.swo
+*.bak
+*.old
+*.orig
+*.rej
+*.save
+*.pid
+*.seed
+
+# Environment files / secrets
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+env.local
+secrets.env
+*.key
+*.pem
+
+# Node / JavaScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.pnpm-debug.log
+package-lock.json
+yarn.lock
+.pnp.*
+.next/
+.nuxt/
+.out/
+dist/
+public/
+.cache/
+.cache-loader/
+.parcel-cache/
+.svelte-kit/
+.vite/
+storybook-static/
+coverage/
+coverage-final.json
+jest-*.json
+
+# TypeScript / built artifacts
+*.tsbuildinfo
+*.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+.tox/
+.env/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+htmlcov/
+mypy_cache/
+.pyre/
+.dmypy.json
+.pytype/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+recompile_ddr.log
+target/
+out/
+build/
+bin/
+.classpath
+.project
+.settings/
+*.iml
+
+# Gradle
+.gradle/
+build/
+!gradle-wrapper.jar
+.gradle-cache/
+gradle-app.setting
+.gradle/
+gradlew
+gradlew.bat
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+dependency-reduced-pom.xml
+
+# Scala / SBT
+target/
+.idea_modules/
+.cache/
+.history
+
+# .NET
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.vs/
+.vs/
+.vscode/
+*.nupkg
+packages/
+.nuget/
+project.lock.json
+artifacts/
+
+# Go
+bin/
+obj/
+pkg/
+*.exe
+*.exe~
+*.test
+*.out
+vendor/
+Godeps/
+*.mod
+go.sum
+
+# Ruby / Rails
+*.gem
+*.rbc
+.bundle/
+vendor/bundle/
+vendor/cache/
+vendor/assets/
+log/
+tmp/
+tmp/**/*
+tmp/pids/
+tmp/cache/
+tmp/sockets/
+tmp/*.pid
+.byebug_history
+config/master.key
+db/*.sqlite3
+db/*.sqlite3-journal
+
+# PHP / Composer / Laravel
+vendor/
+composer.lock
+composer.phar
+node_modules/
+public/storage
+storage/*.key
+.env.*.php
+.env.backup
+Homestead.yaml
+Homestead.json
+.phpunit.result.cache
+.php_cs.cache
+
+# WordPress / CMS
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/backup-db/
+sitemap.xml.gz
+
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock
+
+# C / C++ / Objective-C
+*.obj
+*.o
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.ilk
+*.idb
+*.pdb
+*.pch
+*.ipdb
+*.iobj
+*.su
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt
+
+# Swift / Xcode / Apple
+*.xcworkspace
+*.xcuserstate
+*.xcuserdatad/
+*.xcuserdata/
+*.xcodeproj/project.xcworkspace/
+build/
+DerivedData/
+*.ipa
+*.app
+Pods/
+*.moved-aside
+*.xcscmblueprint
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+
+# Android / Gradle
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+local.properties
+*.iml
+*.hprof
+
+# IDEs and editors
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains (IntelliJ, PyCharm, Rider, WebStorm, etc.)
+.idea/
+*.iml
+*.iws
+.idea/*
+
+# Eclipse
+.project
+.settings/
+.metadata/
+.recommenders/
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+# Emacs
+*~
+# Emacs autosaves
+.#*
+# Emacs backup
+*~
+
+# Vim
+*.swp
+*.swo
+Session.vim
+tags
+
+# nano
+.nanorc
+
+# Docker
+docker-compose.override.yml
+.env.docker
+docker-compose.*.yml
+**/Dockerfile.*
+**/.dockerignore
+docker-compose.override.yml
+.docker/
+.dockerignore
+docker-compose.yml
+
+# Kubernetes / Helm
+*.kube/cache
+helm-debug.log
+config-*.yaml
+secrets-*.yaml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Ansible
+.hosts/
+.retry
+vault-password
+
+# CI / CI artifacts
+circleci/
+.circleci/
+.github/workflows/
+.gitlab-ci.yml
+.gitlab/
+travis/
+travis.yml
+test-results/
+artifacts/
+jenkins/
+buildkite/
+fastlane/report.xml
+
+# Binary assets / generated files
+dist/
+release/
+*.apk
+*.aab
+*.ipa
+*.dmg
+*.iso
+*.zip
+*.tar.gz
+*.7z
+
+# Generated docs
+docs/_build/
+site/
+*.html
+*.pdf
+
+# Package managers caches
+.cache/
+.cache/
+bower_components/
+jspm_packages/
+
+# Applications and misc
+.envrc
+.vimrc.local
+.history
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Locks and editors state
+*.lock
+*.log
+*.cache
+
+# Coverage and reports
+coverage/
+coverage/*
+lcov-report/
+
+# Ignore everything in .idea except recommended files (if desired)
+# Uncomment to keep specific JetBrains settings
+# .idea/*
+# !.idea/inspectionProfiles
+# !.idea/dictionaries
+
+# Local tools
+/.idea/
+/.vscode/
+local-override.properties
+local.properties
+
+# Fallback: ignore common build and temp directories
+build/
+tmp/
+temp/
+out/
+
+# End of file
