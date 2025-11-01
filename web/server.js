@@ -10,17 +10,24 @@ const db = new DatabaseWrapper();
 
 app.use(cors());
 app.use(express.json());
-// Add debug logging
-console.log('Public directory:', path.join(__dirname, 'public'));
-console.log('Directory exists:', require('fs').existsSync(path.join(__dirname, 'public')));
+const fs = require('fs');
 
-// Handle both local and production paths
+// Add debug logging
 const publicPath = path.join(__dirname, 'public');
+console.log('Public directory:', publicPath);
+console.log('Directory exists:', fs.existsSync(publicPath));
+console.log('Files in public:', fs.existsSync(publicPath) ? fs.readdirSync(publicPath) : 'Directory not found');
+
 app.use(express.static(publicPath));
 
 // Serve index.html for root route
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.send('<h1>FriendBook</h1><p>Static files not found. API is running.</p>');
+    }
 });
 
 async function initDatabase() {
