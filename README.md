@@ -1,13 +1,13 @@
 # FriendBook
 
-A dual-interface social networking application with CLI and web versions.
+A dual-interface social networking application with CLI and web versions using a shared online database.
 
 ## Quick Start
 
 ```bash
 make all
-./friendbook
-./friendbook web
+./build/friendbook    # CLI version
+./share.sh           # Web version with online access
 ```
 
 ## Default Admin Account
@@ -18,10 +18,9 @@ make all
 ## Build Commands
 
 ```bash
-./friendbook cli
-./friendbook web
-./friendbook build
-./friendbook clean
+make cli    # Build CLI application
+make web    # Setup web application
+make clean  # Clean build files
 ```
 
 ## Features
@@ -30,21 +29,30 @@ make all
 - Friend request system
 - Friendship management
 - Friend suggestions
-- Admin dashboard
+- Admin dashboard with user management
 - Real-time web interface
-- Unified SQLite database
+- Shared online database (Turso)
 
 ## Architecture
 
 ```
 FriendBook/
-├── src/
-├── include/
-├── web/
-├── data/
-├── Makefile
-└── friendbook
+├── src/           # CLI source code
+├── include/       # Header files
+├── web/           # Web application
+├── build/         # Compiled CLI binary
+└── Makefile       # Build configuration
 ```
+
+## Online Database Setup
+
+1. Configure Turso credentials in `web/.env`:
+   ```
+   TURSO_DATABASE_URL=your_database_url
+   TURSO_AUTH_TOKEN=your_auth_token
+   ```
+
+2. Both CLI and web will use the same online database
 
 ## Team
 

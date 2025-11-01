@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sqlite3.h>
 #include "user.h"
 #include "graph.h"
 #include "auth.h"
@@ -8,11 +9,20 @@
 #include "friend_request.h"
 #include "hashtable.h"
 #include "suggestions.h"
-#define USERS_FILE "data/users.csv"
-#define FRIENDS_FILE "data/friendships.csv"
-#define REQS_FILE "data/requests.csv"
+
+sqlite3 *db;
+
 static void clearScreen() {
     printf("\033[2J\033[H");
+}
+
+int initDatabase() {
+    int rc = sqlite3_open("web/friendbook.db", &db);
+    if (rc) {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+    return 1;
 }
 static void printHeader() {
     printf("\033[1;36m");
@@ -22,10 +32,12 @@ static void printHeader() {
     printf("╚══════════════════════════════════════════════════════════╝\033[0m\n");
 }
 static void autoSave(User* users, Graph* g, FRQueue* q) {
-    saveUsers(USERS_FILE, users);
-    saveFriendships(FRIENDS_FILE, g);
-    saveRequests(REQS_FILE, q->front);
-    syncToDatabase(users, g, q->front);
+    (void)g; (void)q; // Suppress unused parameter warnings
+    User* current = users;
+    while (current) {
+        saveUserToDB(current);
+        current = current->next;
+    }
 }
 static void menu(User* currentUser) {
     clearScreen();
@@ -64,16 +76,19 @@ int main() {
     Graph* g = createGraph(MAX_USERS);
     FRQueue q; fr_init(&q);
     HashTable* ht = createHashTable();
+    
     if (!initDatabase()) {
         printf("Failed to initialize database!\n");
         return 1;
     }
-    loadUsers(USERS_FILE, &users, &userCount);
+    
+    // Load data from database instead of files
+    loadUsersFromDB(&users, &userCount);
     createDefaultAdmin(&users, &userCount);
     buildHashTable(ht, users);
-    loadFriendships(FRIENDS_FILE, g, userCount);
-    loadRequests(REQS_FILE, &q.front);
-    syncToDatabase(users, g, q.front);
+    loadFriendshipsFromDB(g, userCount);
+    loadRequestsFromDB(&q.front);
+    
     int loggedId = -1;
     char username[MAX_NAME], firstName[MAX_NAME], lastName[MAX_NAME], pass[MAX_PASS];
     User* currentUser = NULL;

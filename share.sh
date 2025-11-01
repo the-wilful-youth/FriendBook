@@ -7,9 +7,18 @@ echo "================================="
 pkill -f "node server.js" 2>/dev/null
 pkill -f "ngrok" 2>/dev/null
 
-# Start the server
-echo "🚀 Starting FriendBook server..."
+# Start the server with environment variables
+echo "🚀 Starting FriendBook server with online database..."
 cd web
+
+# Load environment variables and start server
+if [ -f .env ]; then
+    export $(cat .env | xargs)
+    echo "✅ Loaded online database configuration"
+else
+    echo "⚠️  No .env file found, using local database"
+fi
+
 node server.js &
 SERVER_PID=$!
 cd ..
@@ -53,7 +62,7 @@ NGROK_PID=$!
 LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | head -1 | awk '{print $2}')
 
 echo ""
-echo "✅ FriendBook is now accessible!"
+echo "✅ FriendBook is now accessible with online database!"
 echo ""
 echo "🏠 Local: http://localhost:$PORT"
 echo "📱 Network: http://$LOCAL_IP:$PORT"

@@ -3,13 +3,16 @@
 #include "user.h"
 #include "graph.h"
 #include "friend_request.h"
+#include <sqlite3.h>
+
+extern sqlite3 *db;
+
 int initDatabase();
 void closeDatabase();
-void syncToDatabase(User* users, Graph* g, FriendRequest* requests);
-int saveUsers(const char* path, User* head);
-int loadUsers(const char* path, User** head, int* userCount);
-int saveFriendships(const char* path, Graph* g);
-int loadFriendships(const char* path, Graph* g, int userCount);
-int saveRequests(const char* path, FriendRequest* head);
-int loadRequests(const char* path, FriendRequest** head);
+void loadUsersFromDB(User** head, int* userCount);
+void loadFriendshipsFromDB(Graph* g, int userCount);
+void loadRequestsFromDB(FriendRequest** head);
+void saveUserToDB(User* user);
+void saveFriendshipToDB(int user1, int user2);
+void saveRequestToDB(FriendRequest* req);
 #endif
