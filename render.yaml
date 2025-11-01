@@ -2,10 +2,16 @@ services:
   - type: web
     name: friendbook-web
     env: node
-    buildCommand: cd web && npm install
+    region: singapore
+    plan: free
+    buildCommand: cd web && npm install --production
     startCommand: cd web && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
+      - key: TURSO_DATABASE_URL
+        value: libsql://friendbook-thewilfulyouth.aws-ap-south-1.turso.io
+      - key: TURSO_AUTH_TOKEN
+        value: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NjE5ODg3MTUsImlkIjoiMDUyZDQxMzEtNTdmZC00NTc3LTg0NmYtNzczMTk1OGZiOWE3IiwicmlkIjoiNGNmOTc5OGQtZjQ5Ni00ZjY4LTkzNmYtYzk1YzhjYTY5ZmY3In0.28oM-2enlVzsWJsLjUu-958lqCZxgdqSD0JJ4O9syUzwTWYQavGe8IbLGUxuJx95ckYCQ59PYed70_XgU81PCw
