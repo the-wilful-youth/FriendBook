@@ -49,6 +49,11 @@ async function initDatabase() {
 
 initDatabase();
 
+// Serve the main page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     
