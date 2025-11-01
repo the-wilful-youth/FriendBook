@@ -18,6 +18,11 @@ console.log('Directory exists:', require('fs').existsSync(path.join(__dirname, '
 const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 
+// Serve index.html for root route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 async function initDatabase() {
     try {
         await db.run(`CREATE TABLE IF NOT EXISTS users (
