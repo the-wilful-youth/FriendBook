@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: friendbook-web
+    env: node
+    buildCommand: cd web && npm install
+    startCommand: cd web && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
