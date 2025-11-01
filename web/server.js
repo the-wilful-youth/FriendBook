@@ -14,9 +14,13 @@ const fs = require('fs');
 
 // Add debug logging
 const publicPath = path.join(__dirname, 'public');
+console.log('Current directory:', __dirname);
 console.log('Public directory:', publicPath);
 console.log('Directory exists:', fs.existsSync(publicPath));
-console.log('Files in public:', fs.existsSync(publicPath) ? fs.readdirSync(publicPath) : 'Directory not found');
+console.log('All files in current dir:', fs.readdirSync(__dirname));
+if (fs.existsSync(publicPath)) {
+    console.log('Files in public:', fs.readdirSync(publicPath));
+}
 
 app.use(express.static(publicPath));
 
@@ -26,7 +30,28 @@ app.get('/', (req, res) => {
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        res.send('<h1>FriendBook</h1><p>Static files not found. API is running.</p>');
+        // Try to find index.html anywhere
+        const findIndex = (dir) => {
+            const files = fs.readdirSync(dir);
+            for (const file of files) {
+                const fullPath = path.join(dir, file);
+                if (fs.statSync(fullPath).isDirectory()) {
+                    const found = findIndex(fullPath);
+                    if (found) return found;
+                } else if (file === 'index.html') {
+                    return fullPath;
+                }
+            }
+            return null;
+        };
+        
+        const foundIndex = findIndex(process.cwd());
+        if (foundIndex) {
+            console.log('Found index.html at:', foundIndex);
+            res.sendFile(foundIndex);
+        } else {
+            res.send('<h1>FriendBook</h1><p>Static files not found. API is running.</p><p>Current dir: ' + __dirname + '</p>');
+        }
     }
 });
 
