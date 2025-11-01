@@ -4,8 +4,9 @@ services:
     env: node
     region: singapore
     plan: free
-    buildCommand: cd web && npm install --production
-    startCommand: cd web && npm start
+    rootDir: web
+    buildCommand: npm install --production
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
