@@ -10,7 +10,13 @@ const db = new DatabaseWrapper();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Add debug logging
+console.log('Public directory:', path.join(__dirname, 'public'));
+console.log('Directory exists:', require('fs').existsSync(path.join(__dirname, 'public')));
+
+// Handle both local and production paths
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
 
 async function initDatabase() {
     try {
