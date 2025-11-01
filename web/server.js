@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 const cors = require('cors');
 const path = require('path');
 const { DatabaseWrapper } = require('./db-config');
@@ -10,50 +10,7 @@ const db = new DatabaseWrapper();
 
 app.use(cors());
 app.use(express.json());
-const fs = require('fs');
-
-// Add debug logging
-const publicPath = path.join(__dirname, 'public');
-console.log('Current directory:', __dirname);
-console.log('Public directory:', publicPath);
-console.log('Directory exists:', fs.existsSync(publicPath));
-console.log('All files in current dir:', fs.readdirSync(__dirname));
-if (fs.existsSync(publicPath)) {
-    console.log('Files in public:', fs.readdirSync(publicPath));
-}
-
-app.use(express.static(publicPath));
-
-// Serve index.html for root route
-app.get('/', (req, res) => {
-    const indexPath = path.join(__dirname, 'public', 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        // Try to find index.html anywhere
-        const findIndex = (dir) => {
-            const files = fs.readdirSync(dir);
-            for (const file of files) {
-                const fullPath = path.join(dir, file);
-                if (fs.statSync(fullPath).isDirectory()) {
-                    const found = findIndex(fullPath);
-                    if (found) return found;
-                } else if (file === 'index.html') {
-                    return fullPath;
-                }
-            }
-            return null;
-        };
-        
-        const foundIndex = findIndex(process.cwd());
-        if (foundIndex) {
-            console.log('Found index.html at:', foundIndex);
-            res.sendFile(foundIndex);
-        } else {
-            res.send('<h1>FriendBook</h1><p>Static files not found. API is running.</p><p>Current dir: ' + __dirname + '</p>');
-        }
-    }
-});
+app.use(express.static(path.join(__dirname, 'public')));
 
 async function initDatabase() {
     try {
@@ -92,11 +49,6 @@ async function initDatabase() {
 
 initDatabase();
 
-// Serve the main page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     
@@ -111,7 +63,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
         
-        const valid = password === user.password; // Simple comparison for now
+        const valid = await bcrypt.compare(password, user.password);
         if (!valid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -142,7 +94,7 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ error: 'Username already exists' });
         }
         
-        const hashedPassword = password; // Store plain text for now
+        const hashedPassword = await bcrypt.hash(password, 10);
         await db.run('INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)',
             [username, firstName, lastName, hashedPassword, 0]);
         
@@ -268,7 +220,7 @@ app.post('/api/admin/users', async (req, res) => {
     const { username, firstName, lastName, password, isAdmin } = req.body;
     
     try {
-        const hashedPassword = password; // Store plain text for now
+        const hashedPassword = await bcrypt.hash(password, 10);
         await db.run('INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)',
             [username, firstName, lastName, hashedPassword, isAdmin ? 1 : 0]);
         res.json({ success: true, message: 'User created successfully' });
