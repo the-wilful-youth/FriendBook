@@ -1,0 +1,15 @@
+src/
+include/
+build/
+obj/
+*.o
+*.c
+*.h
+Makefile
+share.sh
+web/node_modules/
+web/friendbook.db
+web/server.js
+web/server_old.js
+web/scripts/
+.DS_Store

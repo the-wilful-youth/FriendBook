@@ -15,10 +15,24 @@ void loadUsersFromDB(User** head, int* userCount) {
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         User* newUser = malloc(sizeof(User));
         newUser->id = sqlite3_column_int(stmt, 0);
-        strcpy(newUser->username, (char*)sqlite3_column_text(stmt, 1));
-        strcpy(newUser->firstName, (char*)sqlite3_column_text(stmt, 2));
-        strcpy(newUser->lastName, (char*)sqlite3_column_text(stmt, 3));
-        strcpy(newUser->password, (char*)sqlite3_column_text(stmt, 4));
+        
+        const char* username = (char*)sqlite3_column_text(stmt, 1);
+        const char* firstName = (char*)sqlite3_column_text(stmt, 2);
+        const char* lastName = (char*)sqlite3_column_text(stmt, 3);
+        const char* password = (char*)sqlite3_column_text(stmt, 4);
+        
+        if (username) strcpy(newUser->username, username);
+        else strcpy(newUser->username, "");
+        
+        if (firstName) strcpy(newUser->firstName, firstName);
+        else strcpy(newUser->firstName, "");
+        
+        if (lastName) strcpy(newUser->lastName, lastName);
+        else strcpy(newUser->lastName, "");
+        
+        if (password) strcpy(newUser->password, password);
+        else strcpy(newUser->password, "");
+        
         newUser->isAdmin = sqlite3_column_int(stmt, 5);
         newUser->next = *head;
         *head = newUser;

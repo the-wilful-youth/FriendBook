@@ -52,18 +52,27 @@ initDatabase();
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     
+    console.log('Login attempt:', { username, password: password ? '[PROVIDED]' : '[MISSING]' });
+    
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password required' });
     }
     
     try {
+        console.log('Querying database for user:', username);
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+        console.log('User found:', !!user);
         
         if (!user) {
+            console.log('User not found in database');
             return res.status(401).json({ error: 'Invalid credentials' });
         }
         
+        console.log('User details:', { id: user.id, username: user.username, isAdmin: user.isAdmin });
+        console.log('Comparing password...');
         const valid = await bcrypt.compare(password, user.password);
+        console.log('Password comparison result:', valid);
+        
         if (!valid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }

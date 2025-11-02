@@ -22,6 +22,39 @@ int initDatabase() {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return 0;
     }
+    
+    // Create tables if they don't exist
+    const char* createUsers = "CREATE TABLE IF NOT EXISTS users ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "username TEXT UNIQUE NOT NULL,"
+        "firstName TEXT NOT NULL,"
+        "lastName TEXT NOT NULL,"
+        "password TEXT NOT NULL,"
+        "isAdmin INTEGER DEFAULT 0"
+        ")";
+    
+    const char* createFriendships = "CREATE TABLE IF NOT EXISTS friendships ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "user1_id INTEGER NOT NULL,"
+        "user2_id INTEGER NOT NULL,"
+        "UNIQUE(user1_id, user2_id)"
+        ")";
+    
+    const char* createRequests = "CREATE TABLE IF NOT EXISTS friend_requests ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "sender_id INTEGER NOT NULL,"
+        "receiver_id INTEGER NOT NULL,"
+        "status TEXT DEFAULT 'pending',"
+        "UNIQUE(sender_id, receiver_id)"
+        ")";
+    
+    if (sqlite3_exec(db, createUsers, NULL, NULL, NULL) != SQLITE_OK ||
+        sqlite3_exec(db, createFriendships, NULL, NULL, NULL) != SQLITE_OK ||
+        sqlite3_exec(db, createRequests, NULL, NULL, NULL) != SQLITE_OK) {
+        fprintf(stderr, "Failed to create database tables\n");
+        return 0;
+    }
+    
     return 1;
 }
 static void printHeader() {
