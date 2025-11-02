@@ -51,9 +51,9 @@ async function initDatabase() {
     }
 }
 
-// Routes
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../web/public/index.html'));
+// Routes - only API endpoints, static files served by Vercel
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'API working' });
 });
 
 app.post('/api/login', async (req, res) => {
