@@ -1,32 +1,3 @@
-const { DatabaseWrapper } = require('../web/db-config');
-
-const db = new DatabaseWrapper();
-
-// Initialize database tables
-async function initDatabase() {
-    try {
-        await db.run(`CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            firstName TEXT NOT NULL,
-            lastName TEXT NOT NULL,
-            password TEXT NOT NULL,
-            isAdmin INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`);
-
-        // Create admin user if it doesn't exist
-        const adminExists = await db.get('SELECT * FROM users WHERE username = ?', ['admin']);
-        if (!adminExists) {
-            await db.run('INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)',
-                ['admin', 'Admin', 'User', 'admin123', 1]);
-            console.log('Admin user created');
-        }
-    } catch (error) {
-        console.error('Database initialization error:', error);
-    }
-}
-
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -38,29 +9,85 @@ module.exports = async (req, res) => {
     
     if (req.method === 'POST') {
         try {
-            // Initialize database on first request
-            await initDatabase();
-            
             const { username, password } = req.body;
-            console.log('Login attempt:', username);
+            console.log('Login attempt for:', username);
             
-            const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-            console.log('User found:', user ? 'Yes' : 'No');
+            // Check if we have Turso credentials
+            if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+                console.log('No Turso credentials, using hardcoded admin');
+                // Fallback to hardcoded admin for testing
+                if (username === 'admin' && password === 'admin123') {
+                    return res.json({
+                        success: true,
+                        user: {
+                            id: 1,
+                            username: 'admin',
+                            firstName: 'Admin',
+                            lastName: 'User',
+                            isAdmin: 1
+                        }
+                    });
+                } else {
+                    return res.status(401).json({ error: 'Invalid credentials' });
+                }
+            }
             
-            if (!user || password !== user.password) {
+            // Use Turso database
+            const { createClient } = require('@libsql/client');
+            const client = createClient({
+                url: process.env.TURSO_DATABASE_URL,
+                authToken: process.env.TURSO_AUTH_TOKEN
+            });
+            
+            // Create users table if not exists
+            await client.execute(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    firstName TEXT NOT NULL,
+                    lastName TEXT NOT NULL,
+                    password TEXT NOT NULL,
+                    isAdmin INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            
+            // Create admin user if not exists
+            const adminCheck = await client.execute({
+                sql: 'SELECT * FROM users WHERE username = ?',
+                args: ['admin']
+            });
+            
+            if (adminCheck.rows.length === 0) {
+                await client.execute({
+                    sql: 'INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)',
+                    args: ['admin', 'Admin', 'User', 'admin123', 1]
+                });
+                console.log('Admin user created');
+            }
+            
+            // Check login credentials
+            const userResult = await client.execute({
+                sql: 'SELECT * FROM users WHERE username = ?',
+                args: [username]
+            });
+            
+            if (userResult.rows.length === 0 || userResult.rows[0].password !== password) {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
             
-            res.json({ 
-                success: true, 
-                user: { 
-                    id: user.id, 
-                    username: user.username, 
-                    firstName: user.firstName, 
+            const user = userResult.rows[0];
+            res.json({
+                success: true,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    firstName: user.firstName,
                     lastName: user.lastName,
-                    isAdmin: user.isAdmin 
-                } 
+                    isAdmin: user.isAdmin
+                }
             });
+            
         } catch (error) {
             console.error('Login error:', error);
             res.status(500).json({ error: 'Login failed: ' + error.message });
