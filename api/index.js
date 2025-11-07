@@ -1,14 +1,15 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const { DatabaseWrapper } = require('../web/db-config');
 
 const app = express();
 const db = new DatabaseWrapper();
 
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://your-vercel-domain.vercel.app'],
+    credentials: true
+}));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../web/public')));
 
 // Initialize database
 async function initDatabase() {
@@ -51,12 +52,8 @@ async function initDatabase() {
     }
 }
 
-// Routes - only API endpoints, static files served by Vercel
-app.get('/api/test', (req, res) => {
-    res.json({ message: 'API working' });
-});
-
-app.post('/api/login', async (req, res) => {
+// Routes
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     
     try {
@@ -82,7 +79,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/register', async (req, res) => {
     const { username, firstName, lastName, password } = req.body;
     
     try {
@@ -103,7 +100,18 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+app.get('/users', async (req, res) => {
+    try {
+        const users = await db.query('SELECT id, username, firstName, lastName, isAdmin, created_at FROM users');
+        res.json(users);
+    } catch (error) {
+        console.error('Get users error:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
 // Initialize database on startup
 initDatabase();
 
+// For Vercel serverless functions
 module.exports = app;
