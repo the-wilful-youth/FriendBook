@@ -13,8 +13,5 @@
     "@libsql/client": "^0.4.0",
     "sqlite3": "^5.1.6",
     "dotenv": "^16.0.3"
-  },
-  "engines": {
-    "node": "22.x"
   }
 }

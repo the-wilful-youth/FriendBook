@@ -420,3 +420,6 @@ out/
 
 # End of file
 .vercel
+
+# Local Netlify folder
+.netlify
