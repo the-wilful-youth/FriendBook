@@ -549,16 +549,73 @@ window.refreshAllUsers = function() {
 
 window.showAddUserForm = function() {
     console.log('showAddUserForm called');
-    showToast('Add user form working!', 'info');
+    const modal = document.getElementById('add-user-form');
+    if (modal) modal.style.display = 'block';
 }
 
 window.hideAddUserForm = function() {
     console.log('hideAddUserForm called');
+    const modal = document.getElementById('add-user-form');
+    if (modal) modal.style.display = 'none';
+}
+
+window.addUser = async function() {
+    console.log('addUser called');
+    const form = document.getElementById('new-user-form');
+    if (!form) return;
+    
+    const formData = new FormData(form);
+    const userData = {
+        username: formData.get('username'),
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        password: formData.get('password'),
+        isAdmin: formData.get('isAdmin') === 'on'
+    };
+    
+    try {
+        const response = await apiCall('/api/admin/users', {
+            method: 'POST',
+            body: JSON.stringify(userData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showToast('User created successfully', 'success');
+            form.reset();
+            hideAddUserForm();
+            loadAllUsers(); // Refresh the user list
+        } else {
+            showToast(result.error || 'Failed to create user', 'error');
+        }
+    } catch (error) {
+        console.error('Add user error:', error);
+        showToast('Failed to create user', 'error');
+    }
 }
 
 window.clearDatabase = function() {
     console.log('clearDatabase called');
-    showToast('Clear database working!', 'info');
+    if (!confirm('Are you sure you want to clear the database? This will delete all users except admin and cannot be undone!')) {
+        return;
+    }
+    
+    apiCall('/api/admin/clear', { method: 'DELETE' })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showToast('Database cleared successfully', 'success');
+                loadAllUsers(); // Refresh the user list
+                loadDashboard(); // Refresh dashboard stats
+            } else {
+                showToast(result.error || 'Failed to clear database', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Clear database error:', error);
+            showToast('Failed to clear database', 'error');
+        });
 }
 
 console.log('FriendBook app.js loaded successfully');
