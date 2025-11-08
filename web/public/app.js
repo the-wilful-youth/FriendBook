@@ -2,6 +2,38 @@ let currentUser = null;
 
 // Initialize keyboard listeners when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
+    // Restore user session on page load
+    const savedUser = localStorage.getItem('currentUser');
+    const savedToken = localStorage.getItem('token');
+    
+    if (savedUser && savedToken) {
+        try {
+            currentUser = JSON.parse(savedUser);
+            console.log('Session restored for:', currentUser.username);
+            
+            // Switch to main screen
+            document.getElementById('auth-screen').classList.remove('active');
+            document.getElementById('main-screen').classList.add('active');
+            document.getElementById('user-name').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+            
+            // Show admin menu if admin
+            if (currentUser.isAdmin) {
+                const usersMenu = document.getElementById('users-menu');
+                if (usersMenu) usersMenu.style.display = 'block';
+            }
+            
+            // Load dashboard
+            loadDashboard();
+            
+        } catch (error) {
+            console.error('Session restore error:', error);
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('token');
+            currentUser = null;
+        }
+    }
+    
+    // Add keyboard listeners
     const loginUsername = document.getElementById('login-username');
     const loginPassword = document.getElementById('login-password');
     const regPassword = document.getElementById('reg-password');
