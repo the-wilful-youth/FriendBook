@@ -348,7 +348,7 @@ app.post('/api/admin/users', [
     body('firstName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
     body('lastName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
     body('password').isLength({ min: 6, max: 100 }),
-    body('isAdmin').optional().isBoolean()
+    body('isAdmin').optional().isIn([true, false, 'true', 'false', 1, 0])
 ], validate, auth, adminAuth, async (req, res) => {
     const { username, firstName, lastName, password, isAdmin } = req.body;
     

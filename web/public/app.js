@@ -644,7 +644,6 @@ window.hideAddUserForm = function() {
 }
 
 window.addUser = async function() {
-    console.log('addUser called');
     const form = document.getElementById('new-user-form');
     if (!form) return;
     
@@ -657,24 +656,6 @@ window.addUser = async function() {
         isAdmin: formData.get('isAdmin') === 'on'
     };
     
-    console.log('User data to send:', userData);
-    
-    // Basic validation
-    if (!userData.username || !userData.firstName || !userData.lastName || !userData.password) {
-        showToast('Please fill in all required fields', 'error');
-        return;
-    }
-    
-    if (userData.username.length < 3) {
-        showToast('Username must be at least 3 characters', 'error');
-        return;
-    }
-    
-    if (userData.password.length < 6) {
-        showToast('Password must be at least 6 characters', 'error');
-        return;
-    }
-    
     try {
         const response = await apiCall('/api/admin/users', {
             method: 'POST',
@@ -682,20 +663,18 @@ window.addUser = async function() {
         });
         
         const result = await response.json();
-        console.log('Add user response:', result);
         
         if (response.ok && result.success) {
             showToast('User created successfully', 'success');
             form.reset();
             hideAddUserForm();
-            loadAllUsers(); // Refresh the user list
+            loadAllUsers();
         } else {
-            console.error('Add user error:', result);
             showToast(result.error || result.details?.[0]?.msg || 'Failed to create user', 'error');
         }
     } catch (error) {
         console.error('Add user error:', error);
-        showToast('Failed to create user', 'error');
+        showToast('Network error', 'error');
     }
 }
 
