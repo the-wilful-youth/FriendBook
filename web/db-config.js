@@ -19,15 +19,7 @@ function createDatabase() {
         
         return createClient({
             url: process.env.TURSO_DATABASE_URL,
-            authToken: process.env.TURSO_AUTH_TOKEN,
-            timeout: 30000, // 30 second timeout
-            fetch: (url, options) => {
-                return fetch(url, {
-                    ...options,
-                    timeout: 30000,
-                    signal: AbortSignal.timeout(30000)
-                });
-            }
+            authToken: process.env.TURSO_AUTH_TOKEN
         });
     } else {
         console.log('💾 Using local SQLite database');
@@ -36,11 +28,6 @@ function createDatabase() {
                 console.error('Database connection error:', err);
             } else {
                 console.log('Connected to local SQLite database');
-                db.run("PRAGMA journal_mode = WAL");
-                db.run("PRAGMA synchronous = NORMAL");
-                db.run("PRAGMA cache_size = 10000");
-                db.run("PRAGMA temp_store = MEMORY");
-                db.run("PRAGMA mmap_size = 268435456");
             }
         });
         
@@ -51,36 +38,12 @@ function createDatabase() {
 class DatabaseWrapper {
     constructor() {
         this.db = createDatabase();
-        this.isOnline = !!process.env.TURSO_DATABASE_URL;
-        this.retryCount = 0;
-        this.maxRetries = 3;
-    }
-    
-    async executeWithRetry(operation) {
-        for (let i = 0; i < this.maxRetries; i++) {
-            try {
-                return await operation();
-            } catch (error) {
-                console.log(`Database operation failed (attempt ${i + 1}/${this.maxRetries}):`, error.message);
-                
-                if (i === this.maxRetries - 1) {
-                    if (this.isOnline) {
-                        console.log('🔄 Falling back to local database');
-                        this.isOnline = false;
-                        this.db = new sqlite3.Database(DB_CONFIG.local.path);
-                        return await operation();
-                    }
-                    throw error;
-                }
-                
-                // Wait before retry
-                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-            }
-        }
+        this.isOnline = !!(process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
+        console.log('Database mode:', this.isOnline ? 'Online (Turso)' : 'Local (SQLite)');
     }
     
     async query(sql, params = []) {
-        return this.executeWithRetry(async () => {
+        try {
             if (this.isOnline) {
                 const result = await this.db.execute({ sql, args: params });
                 return result.rows;
@@ -92,11 +55,14 @@ class DatabaseWrapper {
                     });
                 });
             }
-        });
+        } catch (error) {
+            console.error('Query error:', error);
+            throw error;
+        }
     }
     
     async run(sql, params = []) {
-        return this.executeWithRetry(async () => {
+        try {
             if (this.isOnline) {
                 const result = await this.db.execute({ sql, args: params });
                 return { id: result.lastInsertRowid, changes: result.rowsAffected };
@@ -108,11 +74,14 @@ class DatabaseWrapper {
                     });
                 });
             }
-        });
+        } catch (error) {
+            console.error('Run error:', error);
+            throw error;
+        }
     }
     
     async get(sql, params = []) {
-        return this.executeWithRetry(async () => {
+        try {
             if (this.isOnline) {
                 const result = await this.db.execute({ sql, args: params });
                 return result.rows[0] || null;
@@ -124,7 +93,10 @@ class DatabaseWrapper {
                     });
                 });
             }
-        });
+        } catch (error) {
+            console.error('Get error:', error);
+            throw error;
+        }
     }
 }
 
