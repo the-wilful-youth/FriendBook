@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FriendBook - Social Network</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; }
+        #auth-container { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; }
+        .auth-card { background: white; padding: 3rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        .auth-card h1 { color: #667eea; font-size: 2.5rem; margin-bottom: 2rem; }
+        .tabs { display: flex; margin-bottom: 2rem; background: #f7fafc; border-radius: 10px; padding: 0.5rem; }
+        .tab-btn { flex: 1; padding: 1rem; border: none; background: transparent; color: #667eea; font-size: 1rem; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+        .tab-btn.active { background: #667eea; color: white; }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .auth-form input { width: 100%; padding: 1rem; margin-bottom: 1.5rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; }
+        .auth-form input:focus { outline: none; border-color: #667eea; }
+        .auth-form button { width: 100%; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+        #app-container { min-height: 100vh; background: #f7fafc; display: none; flex-direction: column; }
+        .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .nav-brand { color: #667eea; font-size: 1.8rem; font-weight: bold; }
+        .nav-user { display: flex; align-items: center; gap: 1rem; }
+        .nav-user button { padding: 0.5rem 1rem; background: #e53e3e; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .main-content { padding: 2rem; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .section h2 { color: #2d3748; font-size: 2rem; margin-bottom: 2rem; }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+        .toast { background: #333; color: white; padding: 1rem 1.5rem; border-radius: 5px; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: translateX(400px); transition: transform 0.3s ease; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: #48bb78; }
+        .toast.error { background: #e53e3e; }
+    </style>
+</head>
+<body>
+    <div id="toast-container"></div>
+    
+    <div id="auth-container">
+        <div class="auth-card">
+            <h1>FriendBook</h1>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showLogin()">Login</button>
+                <button class="tab-btn" onclick="showRegister()">Register</button>
+            </div>
+            
+            <form id="login-form" class="auth-form active">
+                <input type="text" id="login-username" placeholder="Username" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="button" onclick="login()">Login</button>
+            </form>
+            
+            <form id="register-form" class="auth-form">
+                <input type="text" id="reg-username" placeholder="Username" required>
+                <input type="text" id="reg-firstname" placeholder="First Name" required>
+                <input type="text" id="reg-lastname" placeholder="Last Name" required>
+                <input type="password" id="reg-password" placeholder="Password" required>
+                <button type="button" onclick="register()">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <nav class="navbar">
+            <div class="nav-brand">FriendBook</div>
+            <div class="nav-user">
+                <span id="user-name"></span>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div id="dashboard" class="section active">
+                <h2>Welcome to FriendBook!</h2>
+                <p>You are successfully logged in.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => container.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        function showLogin() {
+            document.getElementById('login-form').classList.add('active');
+            document.getElementById('register-form').classList.remove('active');
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.querySelectorAll('.tab-btn')[1].classList.remove('active');
+        }
+
+        function showRegister() {
+            document.getElementById('register-form').classList.add('active');
+            document.getElementById('login-form').classList.remove('active');
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            if (!username || !password) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentUser = result.user;
+                    document.getElementById('user-name').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'flex';
+                    showToast('Login successful!', 'success');
+                } else {
+                    showToast(result.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Login failed', 'error');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('reg-username').value.trim();
+            const firstName = document.getElementById('reg-firstname').value.trim();
+            const lastName = document.getElementById('reg-lastname').value.trim();
+            const password = document.getElementById('reg-password').value;
+            
+            if (!username || !firstName || !lastName || !password) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, firstName, lastName, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Registration successful! Please login.', 'success');
+                    showLogin();
+                    document.getElementById('reg-username').value = '';
+                    document.getElementById('reg-firstname').value = '';
+                    document.getElementById('reg-lastname').value = '';
+                    document.getElementById('reg-password').value = '';
+                } else {
+                    showToast(result.error || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showToast('Registration failed', 'error');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('auth-container').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            showToast('Logged out successfully', 'success');
+        }
+
+        // Handle Enter key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const activeForm = document.querySelector('.auth-form.active');
+                if (activeForm && activeForm.id === 'login-form') {
+                    login();
+                } else if (activeForm && activeForm.id === 'register-form') {
+                    register();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

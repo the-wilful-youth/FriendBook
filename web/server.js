@@ -2,13 +2,26 @@ require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const { DatabaseWrapper } = require('./db-config');
+const { auth, adminAuth, generateToken } = require('./auth');
 
 const app = express();
 const db = new DatabaseWrapper();
 
-app.use(cors());
+// Security middleware
+app.use(helmet());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : true,
+    credentials: true
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -52,37 +65,27 @@ initDatabase();
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     
-    console.log('Login attempt:', { username, password: password ? '[PROVIDED]' : '[MISSING]' });
-    
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password required' });
     }
     
     try {
-        console.log('Querying database for user:', username);
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-        console.log('User found:', !!user);
         
-        if (!user) {
-            console.log('User not found in database');
+        if (!user || !await bcrypt.compare(password, user.password)) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
         
-        console.log('User details:', { id: user.id, username: user.username, isAdmin: user.isAdmin });
-        console.log('Comparing password...');
-        const valid = await bcrypt.compare(password, user.password);
-        console.log('Password comparison result:', valid);
-        
-        if (!valid) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-        
+        const token = generateToken(user);
         res.json({
-            id: user.id,
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            isAdmin: user.isAdmin
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                isAdmin: user.isAdmin
+            }
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -117,7 +120,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', auth, async (req, res) => {
     try {
         const users = await db.query('SELECT id, username, firstName, lastName, isAdmin FROM users');
         res.json(users || []);
@@ -127,7 +130,7 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-app.get('/api/friends/:userId', async (req, res) => {
+app.get('/api/friends/:userId', auth, async (req, res) => {
     const userId = parseInt(req.params.userId);
     
     try {
@@ -142,7 +145,7 @@ app.get('/api/friends/:userId', async (req, res) => {
     }
 });
 
-app.post('/api/friend-request', async (req, res) => {
+app.post('/api/friend-request', auth, async (req, res) => {
     const { fromUserId, toUserId } = req.body;
     
     if (!fromUserId || !toUserId) {
@@ -158,7 +161,7 @@ app.post('/api/friend-request', async (req, res) => {
     }
 });
 
-app.get('/api/sent-requests/:userId', async (req, res) => {
+app.get('/api/sent-requests/:userId', auth, async (req, res) => {
     const userId = parseInt(req.params.userId);
     
     try {
@@ -173,7 +176,7 @@ app.get('/api/sent-requests/:userId', async (req, res) => {
     }
 });
 
-app.get('/api/friend-requests/:userId', async (req, res) => {
+app.get('/api/friend-requests/:userId', auth, async (req, res) => {
     const userId = parseInt(req.params.userId);
     
     try {
@@ -188,7 +191,7 @@ app.get('/api/friend-requests/:userId', async (req, res) => {
     }
 });
 
-app.post('/api/accept-request/:requestId', async (req, res) => {
+app.post('/api/accept-request/:requestId', auth, async (req, res) => {
     const requestId = parseInt(req.params.requestId);
     
     if (!requestId) {
@@ -212,7 +215,7 @@ app.post('/api/accept-request/:requestId', async (req, res) => {
     }
 });
 
-app.delete('/api/admin/users/:id', async (req, res) => {
+app.delete('/api/admin/users/:id', auth, adminAuth, async (req, res) => {
     const userId = parseInt(req.params.id);
     
     try {
@@ -225,7 +228,7 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
-app.post('/api/admin/users', async (req, res) => {
+app.post('/api/admin/users', auth, adminAuth, async (req, res) => {
     const { username, firstName, lastName, password, isAdmin } = req.body;
     
     try {
@@ -238,7 +241,7 @@ app.post('/api/admin/users', async (req, res) => {
     }
 });
 
-app.delete('/api/admin/clear', async (req, res) => {
+app.delete('/api/admin/clear', auth, adminAuth, async (req, res) => {
     try {
         await db.run('DELETE FROM friendships');
         await db.run('DELETE FROM friend_requests');
