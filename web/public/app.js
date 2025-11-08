@@ -190,6 +190,12 @@ window.showSection = function(section) {
         loadDashboard();
     } else if (section === 'users') {
         loadAllUsers();
+    } else if (section === 'friends') {
+        loadFriends();
+    } else if (section === 'requests') {
+        loadRequests();
+    } else if (section === 'suggestions') {
+        loadSuggestions();
     }
 }
 
@@ -287,6 +293,188 @@ window.loadAllUsers = async function() {
     }
 }
 
+// Load friends list
+window.loadFriends = async function() {
+    if (!currentUser) return;
+    
+    try {
+        console.log('Loading friends...');
+        const response = await apiCall(`/api/friends/${currentUser.id}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const friends = await response.json();
+        console.log('Friends loaded:', friends.length);
+        
+        const friendsList = document.getElementById('friends-list');
+        if (friendsList) {
+            if (!friends || friends.length === 0) {
+                friendsList.innerHTML = '<p class="no-data">No friends yet. Send some friend requests!</p>';
+            } else {
+                friendsList.innerHTML = friends.map(friend => `
+                    <div class="user-card">
+                        <h3>${friend.firstName} ${friend.lastName}</h3>
+                        <p>@${friend.username}</p>
+                    </div>
+                `).join('');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Load friends error:', error);
+        const friendsList = document.getElementById('friends-list');
+        if (friendsList) {
+            friendsList.innerHTML = '<p class="error">Failed to load friends. Please try again.</p>';
+        }
+        showToast('Failed to load friends', 'error');
+    }
+}
+
+// Load friend requests
+window.loadRequests = async function() {
+    if (!currentUser) return;
+    
+    try {
+        console.log('Loading friend requests...');
+        const response = await apiCall(`/api/friend-requests/${currentUser.id}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const requests = await response.json();
+        console.log('Friend requests loaded:', requests.length);
+        
+        const requestsList = document.getElementById('requests-list');
+        const requestCount = document.getElementById('request-count');
+        
+        if (requestsList) {
+            if (!requests || requests.length === 0) {
+                requestsList.innerHTML = '<p class="no-data">No pending requests</p>';
+            } else {
+                requestsList.innerHTML = requests.map(request => `
+                    <div class="user-card">
+                        <h3>${request.firstName} ${request.lastName}</h3>
+                        <p>@${request.username}</p>
+                        <button onclick="acceptRequest(${request.id})" class="accept-btn">Accept</button>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        if (requestCount) requestCount.textContent = (requests || []).length;
+        
+    } catch (error) {
+        console.error('Load requests error:', error);
+        const requestsList = document.getElementById('requests-list');
+        if (requestsList) {
+            requestsList.innerHTML = '<p class="error">Failed to load requests. Please try again.</p>';
+        }
+        showToast('Failed to load requests', 'error');
+    }
+}
+
+// Load friend suggestions
+window.loadSuggestions = async function() {
+    if (!currentUser) return;
+    
+    try {
+        console.log('Loading suggestions...');
+        const [usersRes, friendsRes, requestsRes] = await Promise.all([
+            apiCall('/api/users'),
+            apiCall(`/api/friends/${currentUser.id}`),
+            apiCall(`/api/friend-requests/${currentUser.id}`)
+        ]);
+        
+        const users = await usersRes.json();
+        const friends = await friendsRes.json();
+        const requests = await requestsRes.json();
+        
+        // Calculate suggestions
+        const friendIds = new Set((friends || []).map(f => f.id));
+        const requestIds = new Set((requests || []).map(r => r.sender_id));
+        
+        const suggestions = (users || []).filter(user => 
+            user.id !== currentUser.id && 
+            !user.isAdmin &&
+            !friendIds.has(user.id) &&
+            !requestIds.has(user.id)
+        ).slice(0, 10);
+        
+        console.log('Suggestions loaded:', suggestions.length);
+        
+        const suggestionsList = document.getElementById('suggestions-list');
+        if (suggestionsList) {
+            if (suggestions.length === 0) {
+                suggestionsList.innerHTML = '<p class="no-data">No suggestions available</p>';
+            } else {
+                suggestionsList.innerHTML = suggestions.map(user => `
+                    <div class="user-card">
+                        <h3>${user.firstName} ${user.lastName}</h3>
+                        <p>@${user.username}</p>
+                        <button onclick="sendRequestToUser(${user.id})" class="send-btn">Send Request</button>
+                    </div>
+                `).join('');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Load suggestions error:', error);
+        const suggestionsList = document.getElementById('suggestions-list');
+        if (suggestionsList) {
+            suggestionsList.innerHTML = '<p class="error">Failed to load suggestions. Please try again.</p>';
+        }
+        showToast('Failed to load suggestions', 'error');
+    }
+}
+
+window.acceptRequest = async function(requestId) {
+    try {
+        console.log('Accepting request:', requestId);
+        const response = await apiCall(`/api/accept-request/${requestId}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Friend request accepted!', 'success');
+            loadRequests(); // Reload requests
+            loadDashboard(); // Update dashboard stats
+        } else {
+            showToast(data.error || 'Failed to accept request', 'error');
+        }
+    } catch (error) {
+        console.error('Accept request error:', error);
+        showToast('Failed to accept request', 'error');
+    }
+}
+
+window.sendRequestToUser = async function(userId) {
+    try {
+        console.log('Sending request to user:', userId);
+        const response = await apiCall('/api/friend-request', {
+            method: 'POST',
+            body: JSON.stringify({ fromUserId: currentUser.id, toUserId: userId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Friend request sent!', 'success');
+            loadSuggestions(); // Reload suggestions
+            loadDashboard(); // Update dashboard stats
+        } else {
+            showToast(data.error || 'Failed to send request', 'error');
+        }
+    } catch (error) {
+        console.error('Send request error:', error);
+        showToast('Failed to send request', 'error');
+    }
+}
+
 window.deleteUser = async function(userId) {
     if (!confirm('Are you sure you want to delete this user?')) return;
     
@@ -314,12 +502,12 @@ window.sendFriendRequest = function() {
 
 window.refreshFriends = function() {
     console.log('refreshFriends called');
-    showToast('Refresh friends working!', 'info');
+    loadFriends();
 }
 
 window.refreshSuggestions = function() {
     console.log('refreshSuggestions called');
-    showToast('Refresh suggestions working!', 'info');
+    loadSuggestions();
 }
 
 window.refreshAllUsers = function() {
