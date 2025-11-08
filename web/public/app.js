@@ -91,9 +91,12 @@ window.showRegister = function() {
     console.log('showRegister called');
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
+    const tabBtns = document.querySelectorAll('.tab-btn');
     
     if (registerForm) registerForm.classList.add('active');
     if (loginForm) loginForm.classList.remove('active');
+    if (tabBtns[1]) tabBtns[1].classList.add('active');
+    if (tabBtns[0]) tabBtns[0].classList.remove('active');
 }
 
 window.login = async function() {
@@ -183,6 +186,11 @@ window.register = async function() {
         
         if (response.ok) {
             showToast('Registration successful! Please login.', 'success');
+            // Clear form fields
+            usernameEl.value = '';
+            firstNameEl.value = '';
+            lastNameEl.value = '';
+            passwordEl.value = '';
             showLogin();
         } else {
             showToast(data.error || 'Registration failed', 'error');
