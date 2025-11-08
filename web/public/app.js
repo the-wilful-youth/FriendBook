@@ -192,6 +192,7 @@ window.logout = function() {
 }
 
 window.showSection = function(section) {
+    console.log('showSection called with:', section);
     activeSection = section;
     
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
@@ -260,11 +261,14 @@ window.loadFriends = async function() {
     
     try {
         const response = await apiCall(`/api/friends/${currentUser.id}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         const friends = await response.json();
         
         const friendsList = document.getElementById('friends-list');
         if (friendsList) {
-            if (friends.length === 0) {
+            if (!friends || friends.length === 0) {
                 friendsList.innerHTML = '<p class="no-data">No friends yet. Send some friend requests!</p>';
             } else {
                 friendsList.innerHTML = friends.map(friend => `
@@ -277,6 +281,10 @@ window.loadFriends = async function() {
         }
     } catch (error) {
         console.error('Friends load error:', error);
+        const friendsList = document.getElementById('friends-list');
+        if (friendsList) {
+            friendsList.innerHTML = '<p class="error">Failed to load friends. Please try again.</p>';
+        }
     }
 }
 
@@ -285,13 +293,16 @@ window.loadRequests = async function() {
     
     try {
         const response = await apiCall(`/api/friend-requests/${currentUser.id}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         const requests = await response.json();
         
         const requestsList = document.getElementById('requests-list');
         const requestCount = document.getElementById('request-count');
         
         if (requestsList) {
-            if (requests.length === 0) {
+            if (!requests || requests.length === 0) {
                 requestsList.innerHTML = '<p class="no-data">No pending requests</p>';
             } else {
                 requestsList.innerHTML = requests.map(request => `
