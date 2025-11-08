@@ -193,7 +193,19 @@ window.register = async function() {
             passwordEl.value = '';
             showLogin();
         } else {
-            showToast(data.error || 'Registration failed', 'error');
+            // Show specific validation errors
+            if (data.details && data.details.length > 0) {
+                const errorMessages = data.details.map(detail => {
+                    const field = detail.path;
+                    const fieldName = field === 'firstName' ? 'First Name' : 
+                                    field === 'lastName' ? 'Last Name' : 
+                                    field.charAt(0).toUpperCase() + field.slice(1);
+                    return `${fieldName}: Invalid format`;
+                }).join(', ');
+                showToast(errorMessages, 'error');
+            } else {
+                showToast(data.error || 'Registration failed', 'error');
+            }
         }
     } catch (error) {
         console.error('Registration error:', error);
