@@ -183,6 +183,12 @@ app.post('/api/friend-request', [
     const { fromUserId, toUserId } = req.body;
     
     try {
+        // Check if target user is admin
+        const targetUser = await db.get('SELECT isAdmin FROM users WHERE id = ?', [toUserId]);
+        if (targetUser && targetUser.isAdmin) {
+            return res.status(400).json({ error: 'Cannot send friend requests to admin users' });
+        }
+        
         await db.run('INSERT OR IGNORE INTO friend_requests (sender_id, receiver_id) VALUES (?, ?)', [fromUserId, toUserId]);
         res.json({ message: 'Friend request sent' });
     } catch (error) {

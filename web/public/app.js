@@ -424,13 +424,13 @@ window.loadSuggestions = async function() {
         const friends = await friendsRes.json();
         const requests = await requestsRes.json();
         
-        // Calculate suggestions
+        // Calculate suggestions - exclude admin users and current user
         const friendIds = new Set((friends || []).map(f => f.id));
         const requestIds = new Set((requests || []).map(r => r.sender_id));
         
         const suggestions = (users || []).filter(user => 
             user.id !== currentUser.id && 
-            !user.isAdmin &&
+            !user.isAdmin &&  // Exclude all admin users
             !friendIds.has(user.id) &&
             !requestIds.has(user.id)
         ).slice(0, 10);
@@ -527,9 +527,61 @@ window.deleteUser = async function(userId) {
 }
 
 // Simple placeholder functions for other buttons
-window.sendFriendRequest = function() {
+window.sendFriendRequest = async function() {
     console.log('sendFriendRequest called');
-    showToast('Friend request feature working!', 'success');
+    const usernameEl = document.getElementById('request-username');
+    if (!usernameEl) {
+        console.log('request-username element not found');
+        return;
+    }
+    
+    const username = usernameEl.value.trim();
+    console.log('Username to send request to:', username);
+    if (!username) {
+        showToast('Please enter a username', 'error');
+        return;
+    }
+    
+    try {
+        console.log('Fetching users...');
+        const usersResponse = await apiCall('/api/users');
+        const users = await usersResponse.json();
+        console.log('Users fetched:', users.length);
+        const targetUser = users.find(u => u.username === username);
+        
+        if (!targetUser) {
+            console.log('User not found:', username);
+            showToast('User not found', 'error');
+            return;
+        }
+        
+        // Prevent sending friend requests to admin users
+        if (targetUser.isAdmin) {
+            console.log('Cannot send friend request to admin user');
+            showToast('Cannot send friend requests to admin users', 'error');
+            return;
+        }
+        
+        console.log('Sending friend request to user:', targetUser);
+        const response = await apiCall('/api/friend-request', {
+            method: 'POST',
+            body: JSON.stringify({ fromUserId: currentUser.id, toUserId: targetUser.id })
+        });
+        
+        const data = await response.json();
+        console.log('Friend request response:', data);
+        
+        if (response.ok) {
+            showToast('Friend request sent!', 'success');
+            usernameEl.value = '';
+            loadDashboard();
+        } else {
+            showToast(data.error || 'Failed to send request', 'error');
+        }
+    } catch (error) {
+        console.error('Send request error:', error);
+        showToast('Network error', 'error');
+    }
 }
 
 window.refreshFriends = function() {
