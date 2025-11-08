@@ -409,47 +409,42 @@ window.loadRequests = async function() {
     }
 }
 
-// Load friend suggestions
+// Load friend suggestions with advanced algorithm
 window.loadSuggestions = async function() {
     if (!currentUser) return;
     
     try {
-        console.log('Loading suggestions...');
-        const [usersRes, friendsRes, requestsRes] = await Promise.all([
-            apiCall('/api/users'),
-            apiCall(`/api/friends/${currentUser.id}`),
-            apiCall(`/api/friend-requests/${currentUser.id}`)
-        ]);
+        console.log('Loading smart suggestions...');
+        const response = await apiCall(`/api/smart-suggestions/${currentUser.id}`);
         
-        const users = await usersRes.json();
-        const friends = await friendsRes.json();
-        const requests = await requestsRes.json();
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
-        // Calculate suggestions - exclude admin users and current user
-        const friendIds = new Set((friends || []).map(f => f.id));
-        const requestIds = new Set((requests || []).map(r => r.sender_id));
-        
-        const suggestions = (users || []).filter(user => 
-            user.id !== currentUser.id && 
-            !user.isAdmin &&  // Exclude all admin users
-            !friendIds.has(user.id) &&
-            !requestIds.has(user.id)
-        ).slice(0, 10);
-        
-        console.log('Suggestions loaded:', suggestions.length);
+        const suggestions = await response.json();
+        console.log('Smart suggestions loaded:', suggestions.length);
         
         const suggestionsList = document.getElementById('suggestions-list');
         if (suggestionsList) {
-            if (suggestions.length === 0) {
+            if (!suggestions || suggestions.length === 0) {
                 suggestionsList.innerHTML = '<p class="no-data">No suggestions available</p>';
             } else {
-                suggestionsList.innerHTML = suggestions.map(user => `
-                    <div class="user-card">
-                        <h3>${user.firstName} ${user.lastName}</h3>
-                        <p>@${user.username}</p>
-                        <button onclick="sendRequestToUser(${user.id})" class="send-btn">Send Request</button>
-                    </div>
-                `).join('');
+                suggestionsList.innerHTML = suggestions.map(user => {
+                    const mutualText = user.mutual_friends > 0 
+                        ? `<p class="mutual-friends">${user.mutual_friends} mutual friend${user.mutual_friends > 1 ? 's' : ''}</p>`
+                        : '<p class="new-user">New user</p>';
+                    
+                    return `
+                        <div class="user-card ${user.mutual_friends > 0 ? 'has-mutual' : 'new-user-card'}">
+                            <h3>${user.firstName} ${user.lastName}</h3>
+                            <p>@${user.username}</p>
+                            ${mutualText}
+                            <button onclick="sendRequestToUser(${user.id})" class="send-btn">
+                                ${user.mutual_friends > 0 ? 'Add Friend' : 'Send Request'}
+                            </button>
+                        </div>
+                    `;
+                }).join('');
             }
         }
         
