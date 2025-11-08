@@ -201,6 +201,7 @@ window.logout = function() {
 // Navigation
 window.showSection = function(section) {
     console.log('showSection called with:', section);
+    console.log('currentUser:', currentUser);
     activeSection = section;
     
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
@@ -213,11 +214,26 @@ window.showSection = function(section) {
     if (menuBtn) menuBtn.classList.add('active');
     
     switch(section) {
-        case 'dashboard': loadDashboard(); break;
-        case 'friends': loadFriends(); break;
-        case 'requests': loadRequests(); break;
-        case 'suggestions': loadSuggestions(); break;
-        case 'users': loadAllUsers(); break;
+        case 'dashboard': 
+            console.log('Loading dashboard...');
+            loadDashboard(); 
+            break;
+        case 'friends': 
+            console.log('Loading friends...');
+            loadFriends(); 
+            break;
+        case 'requests': 
+            console.log('Loading requests...');
+            loadRequests(); 
+            break;
+        case 'suggestions': 
+            console.log('Loading suggestions...');
+            loadSuggestions(); 
+            break;
+        case 'users': 
+            console.log('Loading users...');
+            loadAllUsers(); 
+            break;
     }
 }
 
@@ -399,31 +415,41 @@ window.loadAllUsers = async function() {
 
 // Action functions
 window.sendFriendRequest = async function() {
+    console.log('sendFriendRequest called');
     const usernameEl = document.getElementById('request-username');
-    if (!usernameEl) return;
+    if (!usernameEl) {
+        console.log('request-username element not found');
+        return;
+    }
     
     const username = usernameEl.value.trim();
+    console.log('Username to send request to:', username);
     if (!username) {
         showToast('Please enter a username', 'error');
         return;
     }
     
     try {
+        console.log('Fetching users...');
         const usersResponse = await apiCall('/api/users');
         const users = await usersResponse.json();
+        console.log('Users fetched:', users.length);
         const targetUser = users.find(u => u.username === username);
         
         if (!targetUser) {
+            console.log('User not found:', username);
             showToast('User not found', 'error');
             return;
         }
         
+        console.log('Sending friend request to user:', targetUser);
         const response = await apiCall('/api/friend-request', {
             method: 'POST',
             body: JSON.stringify({ fromUserId: currentUser.id, toUserId: targetUser.id })
         });
         
         const data = await response.json();
+        console.log('Friend request response:', data);
         
         if (response.ok) {
             showToast('Friend request sent!', 'success');
