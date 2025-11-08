@@ -123,7 +123,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', auth, async (req, res) => {
     try {
         const users = await db.query('SELECT id, username, firstName, lastName, isAdmin FROM users');
         res.json(users || []);
@@ -133,7 +133,7 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-app.get('/api/friends/:userId', async (req, res) => {
+app.get('/api/friends/:userId', auth, async (req, res) => {
     const userId = parseInt(req.params.userId);
     
     try {
@@ -148,7 +148,7 @@ app.get('/api/friends/:userId', async (req, res) => {
     }
 });
 
-app.post('/api/friend-request', async (req, res) => {
+app.post('/api/friend-request', auth, async (req, res) => {
     const { fromUserId, toUserId } = req.body;
     
     if (!fromUserId || !toUserId) {
@@ -164,7 +164,7 @@ app.post('/api/friend-request', async (req, res) => {
     }
 });
 
-app.get('/api/sent-requests/:userId', async (req, res) => {
+app.get('/api/sent-requests/:userId', auth, async (req, res) => {
     const userId = parseInt(req.params.userId);
     
     try {
@@ -179,7 +179,7 @@ app.get('/api/sent-requests/:userId', async (req, res) => {
     }
 });
 
-app.get('/api/friend-requests/:userId', async (req, res) => {
+app.get('/api/friend-requests/:userId', auth, async (req, res) => {
     const userId = parseInt(req.params.userId);
     
     try {
@@ -194,7 +194,7 @@ app.get('/api/friend-requests/:userId', async (req, res) => {
     }
 });
 
-app.post('/api/accept-request/:requestId', async (req, res) => {
+app.post('/api/accept-request/:requestId', auth, async (req, res) => {
     const requestId = parseInt(req.params.requestId);
     
     if (!requestId) {
@@ -218,7 +218,7 @@ app.post('/api/accept-request/:requestId', async (req, res) => {
     }
 });
 
-app.delete('/api/admin/users/:id', async (req, res) => {
+app.delete('/api/admin/users/:id', auth, adminAuth, async (req, res) => {
     const userId = parseInt(req.params.id);
     
     try {
@@ -231,7 +231,7 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     }
 });
 
-app.post('/api/admin/users', async (req, res) => {
+app.post('/api/admin/users', auth, adminAuth, async (req, res) => {
     const { username, firstName, lastName, password, isAdmin } = req.body;
     
     try {
@@ -244,7 +244,7 @@ app.post('/api/admin/users', async (req, res) => {
     }
 });
 
-app.delete('/api/admin/clear', async (req, res) => {
+app.delete('/api/admin/clear', auth, adminAuth, async (req, res) => {
     try {
         await db.run('DELETE FROM friendships');
         await db.run('DELETE FROM friend_requests');
