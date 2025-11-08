@@ -349,6 +349,7 @@ window.loadFriends = async function() {
                     <div class="user-card">
                         <h3>${friend.firstName} ${friend.lastName}</h3>
                         <p>@${friend.username}</p>
+                        <button onclick="removeFriend(${friend.id})" class="delete-btn">Remove Friend</button>
                     </div>
                 `).join('');
             }
@@ -504,6 +505,34 @@ window.sendRequestToUser = async function(userId) {
     } catch (error) {
         console.error('Send request error:', error);
         showToast('Failed to send request', 'error');
+    }
+}
+
+window.removeFriend = async function(friendId) {
+    if (!confirm('Are you sure you want to remove this friend?')) {
+        return;
+    }
+    
+    try {
+        console.log('Removing friend:', friendId);
+        const response = await apiCall('/api/remove-friend', {
+            method: 'DELETE',
+            body: JSON.stringify({ userId: currentUser.id, friendId: friendId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Friend removed successfully', 'success');
+            loadFriends(); // Reload friends list
+            loadDashboard(); // Update dashboard stats
+            loadSuggestions(); // Update suggestions (removed friend might appear)
+        } else {
+            showToast(data.error || 'Failed to remove friend', 'error');
+        }
+    } catch (error) {
+        console.error('Remove friend error:', error);
+        showToast('Failed to remove friend', 'error');
     }
 }
 

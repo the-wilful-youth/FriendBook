@@ -249,6 +249,24 @@ app.post('/api/accept-request/:requestId', [
     }
 });
 
+app.delete('/api/remove-friend', [
+    body('userId').isInt({ min: 1 }),
+    body('friendId').isInt({ min: 1 })
+], validate, auth, async (req, res) => {
+    const { userId, friendId } = req.body;
+    
+    try {
+        // Remove friendship (works both ways due to OR condition)
+        await db.run('DELETE FROM friendships WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)', 
+            [userId, friendId, friendId, userId]);
+        
+        res.json({ message: 'Friend removed successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to remove friend' });
+    }
+});
+
 app.delete('/api/admin/users/:id', [
     param('id').isInt({ min: 1 })
 ], validate, auth, adminAuth, async (req, res) => {
