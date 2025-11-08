@@ -1,5 +1,18 @@
 let currentUser = null;
 
+// Initialize keyboard listeners when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    const loginUsername = document.getElementById('login-username');
+    const loginPassword = document.getElementById('login-password');
+    const regPassword = document.getElementById('reg-password');
+    
+    if (loginUsername) loginUsername.addEventListener('keypress', e => e.key === 'Enter' && login());
+    if (loginPassword) loginPassword.addEventListener('keypress', e => e.key === 'Enter' && login());
+    if (regPassword) regPassword.addEventListener('keypress', e => e.key === 'Enter' && register());
+    
+    console.log('Keyboard listeners added');
+});
+
 // API helper
 function apiCall(url, options = {}) {
     const token = localStorage.getItem('token');
