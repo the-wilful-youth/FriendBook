@@ -128,17 +128,6 @@ window.login = async function() {
         showToast('Network error: Unable to connect to server', 'error');
     }
 }
-            }
-            
-            loadDashboard();
-        } else {
-            showToast(data.error || 'Login failed', 'error');
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        showToast('Network error: Unable to connect to server', 'error');
-    }
-}
 
 window.register = async function() {
     const usernameEl = document.getElementById('reg-username');
