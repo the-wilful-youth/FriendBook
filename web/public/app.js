@@ -191,8 +191,6 @@ window.showSection = function(section) {
     } else if (section === 'users') {
         loadAllUsers();
     }
-    
-    showToast(`Switched to ${section}`, 'info');
 }
 
 // Load dashboard stats
