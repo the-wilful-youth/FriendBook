@@ -14,7 +14,10 @@ const db = new DatabaseWrapper();
 
 // Security middleware
 app.use(helmet());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+app.use(rateLimit({ 
+    windowMs: 15 * 60 * 1000, 
+    max: 1000  // Increased from 100 to 1000 requests per 15 minutes
+}));
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
