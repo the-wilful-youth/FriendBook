@@ -1,28 +1,42 @@
 let currentUser = null;
 let activeSection = 'dashboard';
 
-// Add keyboard event listeners when DOM loads
+// Session restoration and initialization
 document.addEventListener('DOMContentLoaded', function() {
-    // Login form Enter key
+    // Restore user session
+    const savedUser = localStorage.getItem('currentUser');
+    const savedToken = localStorage.getItem('token');
+    
+    if (savedUser && savedToken) {
+        try {
+            currentUser = JSON.parse(savedUser);
+            document.getElementById('auth-screen').classList.remove('active');
+            document.getElementById('main-screen').classList.add('active');
+            document.getElementById('user-name').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+            
+            if (currentUser.isAdmin) {
+                document.getElementById('users-menu').style.display = 'block';
+            }
+            
+            loadDashboard();
+        } catch (error) {
+            console.error('Session restore error:', error);
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('token');
+        }
+    }
+    
+    // Keyboard event listeners
     const loginUsername = document.getElementById('login-username');
     const loginPassword = document.getElementById('login-password');
-    
-    if (loginUsername) loginUsername.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') login();
-    });
-    
-    if (loginPassword) loginPassword.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') login();
-    });
-    
-    // Register form Enter key
     const regPassword = document.getElementById('reg-password');
-    if (regPassword) regPassword.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') register();
-    });
+    
+    if (loginUsername) loginUsername.addEventListener('keypress', e => e.key === 'Enter' && login());
+    if (loginPassword) loginPassword.addEventListener('keypress', e => e.key === 'Enter' && login());
+    if (regPassword) regPassword.addEventListener('keypress', e => e.key === 'Enter' && register());
 });
 
-// Helper function for authenticated API calls
+// API helper
 function apiCall(url, options = {}) {
     const token = localStorage.getItem('token');
     const headers = {
@@ -38,6 +52,7 @@ function apiCall(url, options = {}) {
     return fetch(url, { ...options, headers });
 }
 
+// Toast notifications
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -45,15 +60,14 @@ function showToast(message, type = 'info') {
     toast.textContent = message;
     
     container.appendChild(toast);
-    
     setTimeout(() => toast.classList.add('show'), 100);
-    
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => container.removeChild(toast), 300);
     }, 3000);
 }
 
+// Auth functions
 window.showLogin = function() {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
@@ -94,19 +108,15 @@ window.login = async function() {
     }
     
     try {
-        const response = await apiCall('/api/login', {
+        const response = await fetch('/api/login', {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
         
         const data = await response.json();
         
         if (response.ok) {
-            // Store JWT token and user data
             localStorage.setItem('token', data.token);
             localStorage.setItem('currentUser', JSON.stringify(data.user));
             currentUser = data.user;
@@ -146,17 +156,14 @@ window.register = async function() {
     const password = passwordEl.value;
     
     if (!username || !firstName || !lastName || !password) {
-        showToast('Please fill in all fields');
+        showToast('Please fill in all fields', 'error');
         return;
     }
     
     try {
-        const response = await apiCall('/api/register', {
+        const response = await fetch('/api/register', {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, firstName, lastName, password })
         });
         
@@ -170,18 +177,18 @@ window.register = async function() {
             lastNameEl.value = '';
             passwordEl.value = '';
         } else {
-            showToast(data.error || 'Registration failed');
+            showToast(data.error || 'Registration failed', 'error');
         }
     } catch (error) {
         console.error('Registration error:', error);
-        showToast('Network error: Unable to connect to server');
+        showToast('Network error: Unable to connect to server', 'error');
     }
 }
 
 window.logout = function() {
     currentUser = null;
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');  // Clear JWT token
+    localStorage.removeItem('token');
     
     document.getElementById('main-screen').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
@@ -191,6 +198,7 @@ window.logout = function() {
     showLogin();
 }
 
+// Navigation
 window.showSection = function(section) {
     console.log('showSection called with:', section);
     activeSection = section;
@@ -213,6 +221,7 @@ window.showSection = function(section) {
     }
 }
 
+// Load functions
 window.loadDashboard = async function() {
     if (!currentUser) return;
     
@@ -224,7 +233,6 @@ window.loadDashboard = async function() {
             apiCall(`/api/users`).then(r => r.json())
         ]);
         
-        // Calculate available suggestions (users who aren't friends and no pending requests)
         const friendIds = new Set((friends || []).map(f => f.id));
         const sentRequestIds = new Set((sentRequests || []).map(r => r.receiver_id));
         const receivedRequestIds = new Set((requests || []).map(r => r.id));
@@ -237,7 +245,6 @@ window.loadDashboard = async function() {
             !receivedRequestIds.has(user.id)
         );
         
-        // Safely update DOM elements
         const statFriends = document.getElementById('stat-friends');
         const statRequests = document.getElementById('stat-requests');
         const statSuggestions = document.getElementById('stat-suggestions');
@@ -252,7 +259,6 @@ window.loadDashboard = async function() {
         
     } catch (error) {
         console.error('Dashboard load error:', error);
-        // Don't let dashboard errors break the entire app
     }
 }
 
@@ -261,9 +267,7 @@ window.loadFriends = async function() {
     
     try {
         const response = await apiCall(`/api/friends/${currentUser.id}`);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const friends = await response.json();
         
         const friendsList = document.getElementById('friends-list');
@@ -293,9 +297,7 @@ window.loadRequests = async function() {
     
     try {
         const response = await apiCall(`/api/friend-requests/${currentUser.id}`);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const requests = await response.json();
         
         const requestsList = document.getElementById('requests-list');
@@ -315,9 +317,13 @@ window.loadRequests = async function() {
             }
         }
         
-        if (requestCount) requestCount.textContent = requests.length || 0;
+        if (requestCount) requestCount.textContent = (requests || []).length;
     } catch (error) {
         console.error('Requests load error:', error);
+        const requestsList = document.getElementById('requests-list');
+        if (requestsList) {
+            requestsList.innerHTML = '<p class="error">Failed to load requests. Please try again.</p>';
+        }
     }
 }
 
@@ -337,11 +343,11 @@ window.loadSuggestions = async function() {
         const sentRequests = await sentRequestsResponse.json().catch(() => []);
         const receivedRequests = await receivedRequestsResponse.json();
         
-        const friendIds = new Set(friends.map(f => f.id));
-        const sentRequestIds = new Set(sentRequests.map(r => r.to_user_id));
-        const receivedRequestIds = new Set(receivedRequests.map(r => r.from_user_id));
+        const friendIds = new Set((friends || []).map(f => f.id));
+        const sentRequestIds = new Set((sentRequests || []).map(r => r.receiver_id));
+        const receivedRequestIds = new Set((receivedRequests || []).map(r => r.sender_id));
         
-        const suggestions = users.filter(user => 
+        const suggestions = (users || []).filter(user => 
             user.id !== currentUser.id && 
             !user.isAdmin &&
             !friendIds.has(user.id) &&
@@ -377,12 +383,12 @@ window.loadAllUsers = async function() {
         
         const usersList = document.getElementById('all-users-list');
         if (usersList) {
-            usersList.innerHTML = users.map(user => `
+            usersList.innerHTML = (users || []).map(user => `
                 <div class="user-card">
                     <h3>${user.firstName} ${user.lastName}</h3>
                     <p>@${user.username}</p>
-                    <span class="admin-badge">${user.isAdmin ? 'Admin' : 'User'}</span>
-                    ${user.username !== 'admin' ? `<button onclick="deleteUser(${user.id})" class="delete-btn">Delete</button>` : ''}
+                    <p>${user.isAdmin ? 'Admin' : 'User'}</p>
+                    <button onclick="deleteUser(${user.id})" class="delete-btn">Delete</button>
                 </div>
             `).join('');
         }
@@ -391,6 +397,92 @@ window.loadAllUsers = async function() {
     }
 }
 
+// Action functions
+window.sendFriendRequest = async function() {
+    const usernameEl = document.getElementById('request-username');
+    if (!usernameEl) return;
+    
+    const username = usernameEl.value.trim();
+    if (!username) {
+        showToast('Please enter a username', 'error');
+        return;
+    }
+    
+    try {
+        const usersResponse = await apiCall('/api/users');
+        const users = await usersResponse.json();
+        const targetUser = users.find(u => u.username === username);
+        
+        if (!targetUser) {
+            showToast('User not found', 'error');
+            return;
+        }
+        
+        const response = await apiCall('/api/friend-request', {
+            method: 'POST',
+            body: JSON.stringify({ fromUserId: currentUser.id, toUserId: targetUser.id })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Friend request sent!', 'success');
+            usernameEl.value = '';
+            loadDashboard();
+        } else {
+            showToast(data.error || 'Failed to send request', 'error');
+        }
+    } catch (error) {
+        console.error('Send request error:', error);
+        showToast('Network error', 'error');
+    }
+}
+
+window.sendRequestToUser = async function(userId) {
+    try {
+        const response = await apiCall('/api/friend-request', {
+            method: 'POST',
+            body: JSON.stringify({ fromUserId: currentUser.id, toUserId: userId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Friend request sent!', 'success');
+            loadSuggestions();
+            loadDashboard();
+        } else {
+            showToast(data.error || 'Failed to send request', 'error');
+        }
+    } catch (error) {
+        console.error('Send request error:', error);
+        showToast('Network error', 'error');
+    }
+}
+
+window.acceptRequest = async function(requestId) {
+    try {
+        const response = await apiCall(`/api/accept-request/${requestId}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Friend request accepted!', 'success');
+            loadRequests();
+            loadDashboard();
+            loadSuggestions();
+        } else {
+            showToast(data.error || 'Failed to accept request', 'error');
+        }
+    } catch (error) {
+        console.error('Accept request error:', error);
+        showToast('Network error', 'error');
+    }
+}
+
+// Admin functions
 window.deleteUser = async function(userId) {
     if (!confirm('Are you sure you want to delete this user?')) return;
     
@@ -399,13 +491,14 @@ window.deleteUser = async function(userId) {
         const result = await response.json();
         
         if (result.success) {
-            alert('User deleted successfully');
+            showToast('User deleted successfully', 'success');
             loadAllUsers();
         } else {
-            alert('Failed to delete user');
+            showToast('Error deleting user', 'error');
         }
     } catch (error) {
-        alert('Error deleting user');
+        console.error('Delete user error:', error);
+        showToast('Error deleting user', 'error');
     }
 }
 
@@ -420,7 +513,6 @@ window.hideAddUserForm = function() {
 window.addUser = async function() {
     const form = document.getElementById('new-user-form');
     const formData = new FormData(form);
-    
     const userData = {
         username: formData.get('username'),
         firstName: formData.get('firstName'),
@@ -438,189 +530,39 @@ window.addUser = async function() {
         const result = await response.json();
         
         if (result.success) {
-            alert('User created successfully');
+            showToast('User created successfully', 'success');
             form.reset();
             hideAddUserForm();
             loadAllUsers();
         } else {
-            alert(result.error || 'Failed to create user');
+            showToast(result.error || 'Error creating user', 'error');
         }
     } catch (error) {
-        alert('Error creating user');
+        console.error('Add user error:', error);
+        showToast('Error creating user', 'error');
     }
 }
 
 window.clearDatabase = async function() {
-    if (!confirm('Are you sure you want to clear the entire database? This will remove all users except admin.')) return;
+    if (!confirm('Are you sure you want to clear the database? This cannot be undone.')) return;
     
     try {
         const response = await apiCall('/api/admin/clear', { method: 'DELETE' });
         const result = await response.json();
         
         if (result.success) {
-            alert('Database cleared successfully');
+            showToast('Database cleared successfully', 'success');
             loadAllUsers();
         } else {
-            alert('Failed to clear database');
+            showToast('Error clearing database', 'error');
         }
     } catch (error) {
-        alert('Error clearing database');
+        console.error('Clear database error:', error);
+        showToast('Error clearing database', 'error');
     }
 }
 
-window.sendFriendRequest = async function() {
-    if (!currentUser) return;
-    
-    const usernameEl = document.getElementById('request-username');
-    if (!usernameEl) return;
-    
-    const username = usernameEl.value.trim();
-    if (!username) {
-        showToast('Please enter a username');
-        return;
-    }
-    
-    try {
-        const usersResponse = await apiCall('/api/users');
-        const users = await usersResponse.json();
-        const targetUser = users.find(u => u.username === username);
-        
-        if (!targetUser) {
-            showToast('User not found');
-            return;
-        }
-        
-        const response = await apiCall('/api/friend-request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fromUserId: currentUser.id, toUserId: targetUser.id })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('Friend request sent!', 'success');
-            usernameEl.value = '';
-        } else {
-            showToast(data.error || 'Failed to send request');
-        }
-    } catch (error) {
-        console.error('Send request error:', error);
-        showToast('Network error');
-    }
-}
-
-window.sendRequestToUser = async function(userId) {
-    if (!currentUser) return;
-    
-    try {
-        const response = await apiCall('/api/friend-request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fromUserId: currentUser.id, toUserId: userId })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('Friend request sent!', 'success');
-            loadSuggestions();
-            loadDashboard();
-        } else {
-            showToast(data.error || 'Failed to send request');
-        }
-    } catch (error) {
-        console.error('Send request error:', error);
-        showToast('Network error');
-    }
-}
-
-window.acceptRequest = async function(requestId) {
-    try {
-        const response = await apiCall(`/api/accept-request/${requestId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('Friend request accepted!', 'success');
-            loadRequests();
-            loadDashboard();
-            loadSuggestions();
-        } else {
-            showToast(data.error || 'Failed to accept request');
-        }
-    } catch (error) {
-        console.error('Accept request error:', error);
-        showToast('Network error');
-    }
-}
-
+// Refresh functions
 window.refreshFriends = function() { loadFriends(); }
 window.refreshSuggestions = function() { loadSuggestions(); }
 window.refreshAllUsers = function() { loadAllUsers(); }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-        try {
-            currentUser = JSON.parse(savedUser);
-            const authScreen = document.getElementById('auth-screen');
-            const mainScreen = document.getElementById('main-screen');
-            const userNameEl = document.getElementById('user-name');
-            const usersMenu = document.getElementById('users-menu');
-            
-            if (authScreen) authScreen.classList.remove('active');
-            if (mainScreen) mainScreen.classList.add('active');
-            if (userNameEl) userNameEl.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-            
-            if (currentUser.isAdmin && usersMenu) {
-                usersMenu.style.display = 'block';
-            }
-            
-            loadDashboard();
-        } catch (error) {
-            localStorage.removeItem('currentUser');
-            showLogin();
-        }
-    } else {
-        showLogin();
-    }
-    
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    
-    if (loginForm) {
-        loginForm.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                login();
-            }
-        });
-    }
-    
-    if (registerForm) {
-        registerForm.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                register();
-            }
-        });
-    }
-});
-
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        const activeForm = document.querySelector('.auth-form.active');
-        if (activeForm) {
-            e.preventDefault();
-            if (activeForm.id === 'login-form') {
-                login();
-            } else if (activeForm.id === 'register-form') {
-                register();
-            }
-        }
-    }
-});
