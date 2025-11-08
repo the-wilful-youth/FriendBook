@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
+const { body, param, validationResult } = require('express-validator');
 const path = require('path');
 const { DatabaseWrapper } = require('./db-config');
 
@@ -15,7 +16,7 @@ const db = new DatabaseWrapper();
 app.use(helmet());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // JWT functions
@@ -27,6 +28,15 @@ const auth = (req, res, next) => {
     try { req.user = jwt.verify(token, JWT_SECRET); next(); } catch { res.status(400).json({ error: 'Invalid token' }); }
 };
 const adminAuth = (req, res, next) => req.user?.isAdmin ? next() : res.status(403).json({ error: 'Admin access required' });
+
+// Validation middleware
+const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'Invalid input', details: errors.array() });
+    }
+    next();
+};
 
 async function initDatabase() {
     try {
@@ -65,12 +75,11 @@ async function initDatabase() {
 
 initDatabase();
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', [
+    body('username').trim().isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_]+$/),
+    body('password').isLength({ min: 6, max: 100 })
+], validate, async (req, res) => {
     const { username, password } = req.body;
-    
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Username and password required' });
-    }
     
     try {
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
@@ -96,12 +105,13 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', [
+    body('username').trim().isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_]+$/),
+    body('firstName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
+    body('lastName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
+    body('password').isLength({ min: 6, max: 100 })
+], validate, async (req, res) => {
     const { username, firstName, lastName, password } = req.body;
-    
-    if (!username || !firstName || !lastName || !password) {
-        return res.status(400).json({ error: 'All fields required' });
-    }
     
     try {
         const existingUser = await db.get('SELECT username FROM users WHERE username = ?', [username]);
@@ -148,12 +158,11 @@ app.get('/api/friends/:userId', auth, async (req, res) => {
     }
 });
 
-app.post('/api/friend-request', auth, async (req, res) => {
+app.post('/api/friend-request', [
+    body('fromUserId').isInt({ min: 1 }),
+    body('toUserId').isInt({ min: 1 })
+], validate, auth, async (req, res) => {
     const { fromUserId, toUserId } = req.body;
-    
-    if (!fromUserId || !toUserId) {
-        return res.status(400).json({ error: 'User IDs required' });
-    }
     
     try {
         await db.run('INSERT OR IGNORE INTO friend_requests (sender_id, receiver_id) VALUES (?, ?)', [fromUserId, toUserId]);
@@ -194,12 +203,10 @@ app.get('/api/friend-requests/:userId', auth, async (req, res) => {
     }
 });
 
-app.post('/api/accept-request/:requestId', auth, async (req, res) => {
+app.post('/api/accept-request/:requestId', [
+    param('requestId').isInt({ min: 1 })
+], validate, auth, async (req, res) => {
     const requestId = parseInt(req.params.requestId);
-    
-    if (!requestId) {
-        return res.status(400).json({ error: 'Request ID required' });
-    }
     
     try {
         const request = await db.get('SELECT sender_id, receiver_id FROM friend_requests WHERE id = ?', [requestId]);
@@ -218,7 +225,9 @@ app.post('/api/accept-request/:requestId', auth, async (req, res) => {
     }
 });
 
-app.delete('/api/admin/users/:id', auth, adminAuth, async (req, res) => {
+app.delete('/api/admin/users/:id', [
+    param('id').isInt({ min: 1 })
+], validate, auth, adminAuth, async (req, res) => {
     const userId = parseInt(req.params.id);
     
     try {
@@ -231,7 +240,13 @@ app.delete('/api/admin/users/:id', auth, adminAuth, async (req, res) => {
     }
 });
 
-app.post('/api/admin/users', auth, adminAuth, async (req, res) => {
+app.post('/api/admin/users', [
+    body('username').trim().isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_]+$/),
+    body('firstName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
+    body('lastName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
+    body('password').isLength({ min: 6, max: 100 }),
+    body('isAdmin').optional().isBoolean()
+], validate, auth, adminAuth, async (req, res) => {
     const { username, firstName, lastName, password, isAdmin } = req.body;
     
     try {
