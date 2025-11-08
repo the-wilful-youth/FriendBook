@@ -181,6 +181,7 @@ window.register = async function() {
 window.logout = function() {
     currentUser = null;
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');  // Clear JWT token
     
     document.getElementById('main-screen').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
@@ -223,11 +224,11 @@ window.loadDashboard = async function() {
         ]);
         
         // Calculate available suggestions (users who aren't friends and no pending requests)
-        const friendIds = new Set(friends.map(f => f.id));
-        const sentRequestIds = new Set(sentRequests.map(r => r.receiver_id));
-        const receivedRequestIds = new Set(requests.map(r => r.id));
+        const friendIds = new Set((friends || []).map(f => f.id));
+        const sentRequestIds = new Set((sentRequests || []).map(r => r.receiver_id));
+        const receivedRequestIds = new Set((requests || []).map(r => r.id));
         
-        const availableSuggestions = suggestions.filter(user => 
+        const availableSuggestions = (suggestions || []).filter(user => 
             user.id !== currentUser.id && 
             !user.isAdmin &&
             !friendIds.has(user.id) && 
@@ -235,13 +236,22 @@ window.loadDashboard = async function() {
             !receivedRequestIds.has(user.id)
         );
         
-        document.getElementById('stat-friends').textContent = friends.length || 0;
-        document.getElementById('stat-requests').textContent = requests.length || 0;
-        document.getElementById('stat-suggestions').textContent = availableSuggestions.length || 0;
-        document.getElementById('stat-sent').textContent = sentRequests.length || 0;
-        document.getElementById('request-count').textContent = requests.length || 0;
+        // Safely update DOM elements
+        const statFriends = document.getElementById('stat-friends');
+        const statRequests = document.getElementById('stat-requests');
+        const statSuggestions = document.getElementById('stat-suggestions');
+        const statSent = document.getElementById('stat-sent');
+        const requestCount = document.getElementById('request-count');
+        
+        if (statFriends) statFriends.textContent = (friends || []).length;
+        if (statRequests) statRequests.textContent = (requests || []).length;
+        if (statSuggestions) statSuggestions.textContent = availableSuggestions.length;
+        if (statSent) statSent.textContent = (sentRequests || []).length;
+        if (requestCount) requestCount.textContent = (requests || []).length;
+        
     } catch (error) {
         console.error('Dashboard load error:', error);
+        // Don't let dashboard errors break the entire app
     }
 }
 
