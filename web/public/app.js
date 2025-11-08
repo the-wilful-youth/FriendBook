@@ -1,6 +1,43 @@
 let currentUser = null;
 let activeSection = 'dashboard';
 
+// Add keyboard event listeners when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Login form Enter key
+    const loginUsername = document.getElementById('login-username');
+    const loginPassword = document.getElementById('login-password');
+    
+    if (loginUsername) loginUsername.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+    
+    if (loginPassword) loginPassword.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+    
+    // Register form Enter key
+    const regPassword = document.getElementById('reg-password');
+    if (regPassword) regPassword.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') register();
+    });
+});
+
+// Helper function for authenticated API calls
+function apiCall(url, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers
+    };
+    
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return fetch(url, { ...options, headers });
+}
+
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -57,7 +94,7 @@ window.login = async function() {
     }
     
     try {
-        const response = await fetch('/api/login', {
+        const response = await apiCall('/api/login', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -69,15 +106,28 @@ window.login = async function() {
         const data = await response.json();
         
         if (response.ok) {
-            currentUser = data;
-            localStorage.setItem('currentUser', JSON.stringify(data));
+            // Store JWT token and user data
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            currentUser = data.user;
             
             document.getElementById('auth-screen').classList.remove('active');
             document.getElementById('main-screen').classList.add('active');
-            document.getElementById('user-name').textContent = `${data.firstName} ${data.lastName}`;
+            document.getElementById('user-name').textContent = `${data.user.firstName} ${data.user.lastName}`;
             
-            if (data.isAdmin) {
+            if (data.user.isAdmin) {
                 document.getElementById('users-menu').style.display = 'block';
+            }
+            
+            loadDashboard();
+        } else {
+            showToast(data.error || 'Login failed', 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showToast('Network error: Unable to connect to server', 'error');
+    }
+}
             }
             
             loadDashboard();
@@ -112,7 +162,7 @@ window.register = async function() {
     }
     
     try {
-        const response = await fetch('/api/register', {
+        const response = await apiCall('/api/register', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -177,10 +227,10 @@ window.loadDashboard = async function() {
     
     try {
         const [friends, requests, sentRequests, suggestions] = await Promise.all([
-            fetch(`/api/friends/${currentUser.id}`).then(r => r.json()),
-            fetch(`/api/friend-requests/${currentUser.id}`).then(r => r.json()),
-            fetch(`/api/sent-requests/${currentUser.id}`).then(r => r.json()),
-            fetch(`/api/users`).then(r => r.json())
+            apiCall(`/api/friends/${currentUser.id}`).then(r => r.json()),
+            apiCall(`/api/friend-requests/${currentUser.id}`).then(r => r.json()),
+            apiCall(`/api/sent-requests/${currentUser.id}`).then(r => r.json()),
+            apiCall(`/api/users`).then(r => r.json())
         ]);
         
         // Calculate available suggestions (users who aren't friends and no pending requests)
@@ -210,7 +260,7 @@ window.loadFriends = async function() {
     if (!currentUser) return;
     
     try {
-        const response = await fetch(`/api/friends/${currentUser.id}`);
+        const response = await apiCall(`/api/friends/${currentUser.id}`);
         const friends = await response.json();
         
         const friendsList = document.getElementById('friends-list');
@@ -235,7 +285,7 @@ window.loadRequests = async function() {
     if (!currentUser) return;
     
     try {
-        const response = await fetch(`/api/friend-requests/${currentUser.id}`);
+        const response = await apiCall(`/api/friend-requests/${currentUser.id}`);
         const requests = await response.json();
         
         const requestsList = document.getElementById('requests-list');
@@ -266,10 +316,10 @@ window.loadSuggestions = async function() {
     
     try {
         const [usersResponse, friendsResponse, sentRequestsResponse, receivedRequestsResponse] = await Promise.all([
-            fetch('/api/users'),
-            fetch(`/api/friends/${currentUser.id}`),
-            fetch(`/api/sent-requests/${currentUser.id}`),
-            fetch(`/api/friend-requests/${currentUser.id}`)
+            apiCall('/api/users'),
+            apiCall(`/api/friends/${currentUser.id}`),
+            apiCall(`/api/sent-requests/${currentUser.id}`),
+            apiCall(`/api/friend-requests/${currentUser.id}`)
         ]);
         
         const users = await usersResponse.json();
@@ -312,7 +362,7 @@ window.loadAllUsers = async function() {
     if (!currentUser || !currentUser.isAdmin) return;
     
     try {
-        const response = await fetch('/api/users');
+        const response = await apiCall('/api/users');
         const users = await response.json();
         
         const usersList = document.getElementById('all-users-list');
@@ -335,7 +385,7 @@ window.deleteUser = async function(userId) {
     if (!confirm('Are you sure you want to delete this user?')) return;
     
     try {
-        const response = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+        const response = await apiCall(`/api/admin/users/${userId}`, { method: 'DELETE' });
         const result = await response.json();
         
         if (result.success) {
@@ -370,9 +420,8 @@ window.addUser = async function() {
     };
     
     try {
-        const response = await fetch('/api/admin/users', {
+        const response = await apiCall('/api/admin/users', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(userData)
         });
         
@@ -395,7 +444,7 @@ window.clearDatabase = async function() {
     if (!confirm('Are you sure you want to clear the entire database? This will remove all users except admin.')) return;
     
     try {
-        const response = await fetch('/api/admin/clear', { method: 'DELETE' });
+        const response = await apiCall('/api/admin/clear', { method: 'DELETE' });
         const result = await response.json();
         
         if (result.success) {
@@ -422,7 +471,7 @@ window.sendFriendRequest = async function() {
     }
     
     try {
-        const usersResponse = await fetch('/api/users');
+        const usersResponse = await apiCall('/api/users');
         const users = await usersResponse.json();
         const targetUser = users.find(u => u.username === username);
         
@@ -431,7 +480,7 @@ window.sendFriendRequest = async function() {
             return;
         }
         
-        const response = await fetch('/api/friend-request', {
+        const response = await apiCall('/api/friend-request', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fromUserId: currentUser.id, toUserId: targetUser.id })
@@ -455,7 +504,7 @@ window.sendRequestToUser = async function(userId) {
     if (!currentUser) return;
     
     try {
-        const response = await fetch('/api/friend-request', {
+        const response = await apiCall('/api/friend-request', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fromUserId: currentUser.id, toUserId: userId })
@@ -478,7 +527,7 @@ window.sendRequestToUser = async function(userId) {
 
 window.acceptRequest = async function(requestId) {
     try {
-        const response = await fetch(`/api/accept-request/${requestId}`, {
+        const response = await apiCall(`/api/accept-request/${requestId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
