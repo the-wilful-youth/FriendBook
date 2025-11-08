@@ -188,6 +188,8 @@ window.showSection = function(section) {
     // Load data for specific sections
     if (section === 'dashboard') {
         loadDashboard();
+    } else if (section === 'users') {
+        loadAllUsers();
     }
     
     showToast(`Switched to ${section}`, 'info');
@@ -243,6 +245,69 @@ window.loadDashboard = async function() {
     }
 }
 
+// Load all users for admin
+window.loadAllUsers = async function() {
+    if (!currentUser || !currentUser.isAdmin) {
+        console.log('Not admin, cannot load all users');
+        return;
+    }
+    
+    try {
+        console.log('Loading all users...');
+        const response = await apiCall('/api/users');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const users = await response.json();
+        console.log('Users loaded:', users.length);
+        
+        const usersList = document.getElementById('all-users-list');
+        if (usersList) {
+            if (!users || users.length === 0) {
+                usersList.innerHTML = '<p class="no-data">No users found</p>';
+            } else {
+                usersList.innerHTML = users.map(user => `
+                    <div class="user-card">
+                        <h3>${user.firstName} ${user.lastName}</h3>
+                        <p>@${user.username}</p>
+                        <p>${user.isAdmin ? 'Admin' : 'User'}</p>
+                        ${user.username !== 'admin' ? `<button onclick="deleteUser(${user.id})" class="delete-btn">Delete</button>` : ''}
+                    </div>
+                `).join('');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Load all users error:', error);
+        const usersList = document.getElementById('all-users-list');
+        if (usersList) {
+            usersList.innerHTML = '<p class="error">Failed to load users. Please try again.</p>';
+        }
+        showToast('Failed to load users', 'error');
+    }
+}
+
+window.deleteUser = async function(userId) {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    
+    try {
+        const response = await apiCall(`/api/admin/users/${userId}`, { method: 'DELETE' });
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showToast('User deleted successfully', 'success');
+            loadAllUsers(); // Reload the list
+        } else {
+            showToast(result.error || 'Failed to delete user', 'error');
+        }
+    } catch (error) {
+        console.error('Delete user error:', error);
+        showToast('Failed to delete user', 'error');
+    }
+}
+
 // Simple placeholder functions for other buttons
 window.sendFriendRequest = function() {
     console.log('sendFriendRequest called');
@@ -261,7 +326,7 @@ window.refreshSuggestions = function() {
 
 window.refreshAllUsers = function() {
     console.log('refreshAllUsers called');
-    showToast('Refresh users working!', 'info');
+    loadAllUsers();
 }
 
 window.showAddUserForm = function() {
