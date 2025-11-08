@@ -105,6 +105,9 @@ window.login = async function() {
                 if (usersMenu) usersMenu.style.display = 'block';
             }
             
+            // Load dashboard stats after login
+            loadDashboard();
+            
             showToast('Login successful!', 'success');
         } else {
             showToast(data.error || 'Login failed', 'error');
@@ -182,7 +185,62 @@ window.showSection = function(section) {
     if (sectionEl) sectionEl.classList.add('active');
     if (menuBtn) menuBtn.classList.add('active');
     
+    // Load data for specific sections
+    if (section === 'dashboard') {
+        loadDashboard();
+    }
+    
     showToast(`Switched to ${section}`, 'info');
+}
+
+// Load dashboard stats
+window.loadDashboard = async function() {
+    if (!currentUser) return;
+    
+    try {
+        const [friendsRes, requestsRes, usersRes] = await Promise.all([
+            apiCall(`/api/friends/${currentUser.id}`),
+            apiCall(`/api/friend-requests/${currentUser.id}`),
+            apiCall('/api/users')
+        ]);
+        
+        const friends = await friendsRes.json();
+        const requests = await requestsRes.json();
+        const users = await usersRes.json();
+        
+        // Update dashboard stats
+        const statFriends = document.getElementById('stat-friends');
+        const statRequests = document.getElementById('stat-requests');
+        const statSuggestions = document.getElementById('stat-suggestions');
+        const requestCount = document.getElementById('request-count');
+        
+        if (statFriends) statFriends.textContent = (friends || []).length;
+        if (statRequests) statRequests.textContent = (requests || []).length;
+        if (requestCount) requestCount.textContent = (requests || []).length;
+        
+        // Calculate suggestions (users who aren't friends or have pending requests)
+        const friendIds = new Set((friends || []).map(f => f.id));
+        const requestIds = new Set((requests || []).map(r => r.sender_id));
+        
+        const suggestions = (users || []).filter(user => 
+            user.id !== currentUser.id && 
+            !user.isAdmin &&
+            !friendIds.has(user.id) &&
+            !requestIds.has(user.id)
+        );
+        
+        if (statSuggestions) statSuggestions.textContent = suggestions.length;
+        
+        console.log('Dashboard loaded:', {
+            friends: (friends || []).length,
+            requests: (requests || []).length,
+            suggestions: suggestions.length
+        });
+        
+    } catch (error) {
+        console.error('Dashboard load error:', error);
+        showToast('Failed to load dashboard stats', 'error');
+    }
 }
 
 // Simple placeholder functions for other buttons
