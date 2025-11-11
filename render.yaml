@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: friendbook
+    runtime: node
+    buildCommand: cd web && npm install
+    startCommand: cd web && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 10000

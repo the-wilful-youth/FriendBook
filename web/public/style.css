@@ -457,3 +457,79 @@ body {
 #new-user-form button:hover {
     background: #0056b3;
 }
+/* Advanced Friend Suggestions Styles */
+.user-card.has-mutual {
+    border-left: 4px solid #4CAF50;
+    background: linear-gradient(135deg, #f8fff8 0%, #f0f8f0 100%);
+}
+
+.user-card.new-user-card {
+    border-left: 4px solid #2196F3;
+    background: linear-gradient(135deg, #f8fbff 0%, #f0f6ff 100%);
+}
+
+.mutual-friends {
+    color: #4CAF50;
+    font-weight: 600;
+    font-size: 0.85em;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+}
+
+.mutual-friends::before {
+    content: "👥";
+    margin-right: 5px;
+}
+
+.new-user {
+    color: #2196F3;
+    font-weight: 600;
+    font-size: 0.85em;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+}
+
+.new-user::before {
+    content: "✨";
+    margin-right: 5px;
+}
+
+.user-card .send-btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    transition: all 0.3s ease;
+}
+
+.user-card.has-mutual .send-btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.user-card.new-user-card .send-btn {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.user-card .send-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.user-card.has-mutual::after {
+    content: "Recommended";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #4CAF50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7em;
+    font-weight: 600;
+}
+
+.user-card {
+    position: relative;
+    overflow: visible;
+}

@@ -4,26 +4,57 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const jwt = require('jsonwebtoken');
+const { body, param, validationResult } = require('express-validator');
 const path = require('path');
 const { DatabaseWrapper } = require('./db-config');
-const { auth, adminAuth, generateToken } = require('./auth');
 
 const app = express();
 const db = new DatabaseWrapper();
 
 // Security middleware
-app.use(helmet());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
-
-// CORS configuration
-const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : true,
-    credentials: true
-};
-app.use(cors(corsOptions));
-
-app.use(express.json());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
+            styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'", "https:", "data:"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"],
+        },
+    },
+}));
+app.use(rateLimit({ 
+    windowMs: 15 * 60 * 1000, 
+    max: 1000  // Increased from 100 to 1000 requests per 15 minutes
+}));
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// JWT functions
+const JWT_SECRET = process.env.JWT_SECRET || 'friendbook-secret';
+const generateToken = (user) => jwt.sign({ id: user.id, username: user.username, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '24h' });
+const auth = (req, res, next) => {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Access denied' });
+    try { req.user = jwt.verify(token, JWT_SECRET); next(); } catch { res.status(400).json({ error: 'Invalid token' }); }
+};
+const adminAuth = (req, res, next) => req.user?.isAdmin ? next() : res.status(403).json({ error: 'Admin access required' });
+
+// Validation middleware
+const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'Invalid input', details: errors.array() });
+    }
+    next();
+};
 
 async function initDatabase() {
     try {
@@ -62,12 +93,11 @@ async function initDatabase() {
 
 initDatabase();
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', [
+    body('username').trim().isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_]+$/),
+    body('password').isLength({ min: 6, max: 100 })
+], validate, async (req, res) => {
     const { username, password } = req.body;
-    
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Username and password required' });
-    }
     
     try {
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
@@ -93,12 +123,13 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', [
+    body('username').trim().isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_]+$/),
+    body('firstName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
+    body('lastName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
+    body('password').isLength({ min: 6, max: 100 })
+], validate, async (req, res) => {
     const { username, firstName, lastName, password } = req.body;
-    
-    if (!username || !firstName || !lastName || !password) {
-        return res.status(400).json({ error: 'All fields required' });
-    }
     
     try {
         const existingUser = await db.get('SELECT username FROM users WHERE username = ?', [username]);
@@ -145,14 +176,19 @@ app.get('/api/friends/:userId', auth, async (req, res) => {
     }
 });
 
-app.post('/api/friend-request', auth, async (req, res) => {
+app.post('/api/friend-request', [
+    body('fromUserId').isInt({ min: 1 }),
+    body('toUserId').isInt({ min: 1 })
+], validate, auth, async (req, res) => {
     const { fromUserId, toUserId } = req.body;
     
-    if (!fromUserId || !toUserId) {
-        return res.status(400).json({ error: 'User IDs required' });
-    }
-    
     try {
+        // Check if target user is admin
+        const targetUser = await db.get('SELECT isAdmin FROM users WHERE id = ?', [toUserId]);
+        if (targetUser && targetUser.isAdmin) {
+            return res.status(400).json({ error: 'Cannot send friend requests to admin users' });
+        }
+        
         await db.run('INSERT OR IGNORE INTO friend_requests (sender_id, receiver_id) VALUES (?, ?)', [fromUserId, toUserId]);
         res.json({ message: 'Friend request sent' });
     } catch (error) {
@@ -191,12 +227,10 @@ app.get('/api/friend-requests/:userId', auth, async (req, res) => {
     }
 });
 
-app.post('/api/accept-request/:requestId', auth, async (req, res) => {
+app.post('/api/accept-request/:requestId', [
+    param('requestId').isInt({ min: 1 })
+], validate, auth, async (req, res) => {
     const requestId = parseInt(req.params.requestId);
-    
-    if (!requestId) {
-        return res.status(400).json({ error: 'Request ID required' });
-    }
     
     try {
         const request = await db.get('SELECT sender_id, receiver_id FROM friend_requests WHERE id = ?', [requestId]);
@@ -215,7 +249,95 @@ app.post('/api/accept-request/:requestId', auth, async (req, res) => {
     }
 });
 
-app.delete('/api/admin/users/:id', auth, adminAuth, async (req, res) => {
+app.delete('/api/remove-friend', [
+    body('userId').isInt({ min: 1 }),
+    body('friendId').isInt({ min: 1 })
+], validate, auth, async (req, res) => {
+    const { userId, friendId } = req.body;
+    
+    try {
+        // Remove friendship (works both ways due to OR condition)
+        await db.run('DELETE FROM friendships WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)', 
+            [userId, friendId, friendId, userId]);
+        
+        res.json({ message: 'Friend removed successfully' });
+    } catch (error) {
+        console.error('Database error:', error);
+        res.status(500).json({ error: 'Failed to remove friend' });
+    }
+});
+
+app.get('/api/smart-suggestions/:userId', auth, async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    
+    try {
+        // Get user's direct friends
+        const userFriends = await db.query(`
+            SELECT CASE 
+                WHEN user1_id = ? THEN user2_id 
+                ELSE user1_id 
+            END as friend_id
+            FROM friendships 
+            WHERE user1_id = ? OR user2_id = ?
+        `, [userId, userId, userId]);
+        
+        const friendIds = new Set(userFriends.map(f => f.friend_id));
+        
+        // Get pending/sent requests to exclude
+        const [sentRequests, receivedRequests] = await Promise.all([
+            db.query('SELECT receiver_id FROM friend_requests WHERE sender_id = ?', [userId]),
+            db.query('SELECT sender_id FROM friend_requests WHERE receiver_id = ?', [userId])
+        ]);
+        
+        const excludeIds = new Set([
+            userId,
+            ...friendIds,
+            ...sentRequests.map(r => r.receiver_id),
+            ...receivedRequests.map(r => r.sender_id)
+        ]);
+        
+        // Get all users except excluded ones
+        const allUsers = await db.query('SELECT id, username, firstName, lastName FROM users WHERE isAdmin = 0');
+        const potentialSuggestions = allUsers.filter(user => !excludeIds.has(user.id));
+        
+        // Calculate mutual friends for each suggestion
+        const suggestionsWithMutuals = await Promise.all(
+            potentialSuggestions.map(async (user) => {
+                // Find mutual friends between current user and this potential friend
+                const mutualFriends = await db.query(`
+                    SELECT COUNT(*) as count FROM friendships f1
+                    JOIN friendships f2 ON (
+                        (f1.user1_id = f2.user1_id OR f1.user1_id = f2.user2_id OR 
+                         f1.user2_id = f2.user1_id OR f1.user2_id = f2.user2_id)
+                    )
+                    WHERE (f1.user1_id = ? OR f1.user2_id = ?)
+                    AND (f2.user1_id = ? OR f2.user2_id = ?)
+                    AND f1.id != f2.id
+                `, [userId, userId, user.id, user.id]);
+                
+                return {
+                    ...user,
+                    mutual_friends: mutualFriends[0]?.count || 0,
+                    suggestion_score: (mutualFriends[0]?.count || 0) * 10 + Math.random() * 5
+                };
+            })
+        );
+        
+        // Sort by suggestion score (mutual friends + randomness for variety)
+        const rankedSuggestions = suggestionsWithMutuals
+            .sort((a, b) => b.suggestion_score - a.suggestion_score)
+            .slice(0, 10);
+        
+        res.json(rankedSuggestions);
+    } catch (error) {
+        console.error('Smart suggestions error:', error);
+        res.status(500).json({ error: 'Failed to load suggestions' });
+    }
+});
+
+app.delete('/api/admin/users/:id', [
+    param('id').isInt({ min: 1 })
+], validate, auth, adminAuth, async (req, res) => {
     const userId = parseInt(req.params.id);
     
     try {
@@ -228,7 +350,13 @@ app.delete('/api/admin/users/:id', auth, adminAuth, async (req, res) => {
     }
 });
 
-app.post('/api/admin/users', auth, adminAuth, async (req, res) => {
+app.post('/api/admin/users', [
+    body('username').trim().isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_]+$/),
+    body('firstName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
+    body('lastName').trim().isLength({ min: 1, max: 50 }).matches(/^[a-zA-Z\s]+$/),
+    body('password').isLength({ min: 6, max: 100 }),
+    body('isAdmin').optional().isIn([true, false, 'true', 'false', 1, 0])
+], validate, auth, adminAuth, async (req, res) => {
     const { username, firstName, lastName, password, isAdmin } = req.body;
     
     try {
