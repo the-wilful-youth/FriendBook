@@ -13,6 +13,7 @@ obj/
 .env
 .env.local
 .env.production
+web/.env
 
 # Node modules
 node_modules/

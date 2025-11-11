@@ -271,7 +271,7 @@ app.get('/api/smart-suggestions/:userId', auth, async (req, res) => {
     const userId = parseInt(req.params.userId);
     
     try {
-        // Get user's friends
+        // Get user's direct friends
         const userFriends = await db.query(`
             SELECT CASE 
                 WHEN user1_id = ? THEN user2_id 
@@ -281,47 +281,54 @@ app.get('/api/smart-suggestions/:userId', auth, async (req, res) => {
             WHERE user1_id = ? OR user2_id = ?
         `, [userId, userId, userId]);
         
-        const friendIds = userFriends.map(f => f.friend_id);
+        const friendIds = new Set(userFriends.map(f => f.friend_id));
         
-        // Get pending requests (sent and received)
+        // Get pending/sent requests to exclude
         const [sentRequests, receivedRequests] = await Promise.all([
             db.query('SELECT receiver_id FROM friend_requests WHERE sender_id = ?', [userId]),
             db.query('SELECT sender_id FROM friend_requests WHERE receiver_id = ?', [userId])
         ]);
         
-        const excludeIds = [
+        const excludeIds = new Set([
             userId,
             ...friendIds,
             ...sentRequests.map(r => r.receiver_id),
             ...receivedRequests.map(r => r.sender_id)
-        ];
+        ]);
         
-        // Get all potential suggestions with mutual friend count
-        const suggestions = await db.query(`
-            SELECT DISTINCT u.id, u.username, u.firstName, u.lastName,
-                COUNT(DISTINCT mf.mutual_friend) as mutual_friends
-            FROM users u
-            LEFT JOIN (
-                SELECT DISTINCT 
-                    CASE WHEN f1.user1_id = ? THEN f1.user2_id ELSE f1.user1_id END as mutual_friend,
-                    CASE WHEN f2.user1_id != ? THEN f2.user1_id ELSE f2.user2_id END as suggested_user
-                FROM friendships f1
-                JOIN friendships f2 ON (
-                    (f1.user1_id = f2.user1_id OR f1.user1_id = f2.user2_id OR 
-                     f1.user2_id = f2.user1_id OR f1.user2_id = f2.user2_id)
+        // Get all users except excluded ones
+        const allUsers = await db.query('SELECT id, username, firstName, lastName FROM users WHERE isAdmin = 0');
+        const potentialSuggestions = allUsers.filter(user => !excludeIds.has(user.id));
+        
+        // Calculate mutual friends for each suggestion
+        const suggestionsWithMutuals = await Promise.all(
+            potentialSuggestions.map(async (user) => {
+                // Find mutual friends between current user and this potential friend
+                const mutualFriends = await db.query(`
+                    SELECT COUNT(*) as count FROM friendships f1
+                    JOIN friendships f2 ON (
+                        (f1.user1_id = f2.user1_id OR f1.user1_id = f2.user2_id OR 
+                         f1.user2_id = f2.user1_id OR f1.user2_id = f2.user2_id)
+                    )
+                    WHERE (f1.user1_id = ? OR f1.user2_id = ?)
+                    AND (f2.user1_id = ? OR f2.user2_id = ?)
                     AND f1.id != f2.id
-                )
-                WHERE (f1.user1_id = ? OR f1.user2_id = ?)
-                AND (f2.user1_id != ? AND f2.user2_id != ?)
-            ) mf ON u.id = mf.suggested_user
-            WHERE u.id NOT IN (${excludeIds.map(() => '?').join(',')})
-            AND u.isAdmin = 0
-            GROUP BY u.id, u.username, u.firstName, u.lastName
-            ORDER BY mutual_friends DESC, u.firstName ASC
-            LIMIT 10
-        `, [userId, userId, userId, userId, userId, userId, ...excludeIds]);
+                `, [userId, userId, user.id, user.id]);
+                
+                return {
+                    ...user,
+                    mutual_friends: mutualFriends[0]?.count || 0,
+                    suggestion_score: (mutualFriends[0]?.count || 0) * 10 + Math.random() * 5
+                };
+            })
+        );
         
-        res.json(suggestions || []);
+        // Sort by suggestion score (mutual friends + randomness for variety)
+        const rankedSuggestions = suggestionsWithMutuals
+            .sort((a, b) => b.suggestion_score - a.suggestion_score)
+            .slice(0, 10);
+        
+        res.json(rankedSuggestions);
     } catch (error) {
         console.error('Smart suggestions error:', error);
         res.status(500).json({ error: 'Failed to load suggestions' });
