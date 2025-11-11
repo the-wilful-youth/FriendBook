@@ -479,22 +479,6 @@ This project is part of an academic assignment for **TCS-302: Data Structures in
 
 ---
 
-## 🙏 Acknowledgments
-
-- Course Instructor: [Instructor Name]
-- Institution: [Institution Name]
-- Course: TCS-302 - Data Structures in C
-
----
-
-## 📞 Support
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Contact: [Your Email]
-
----
-
 <div align="center">
 
 **Made with ❤️ by Team ADAPT**
