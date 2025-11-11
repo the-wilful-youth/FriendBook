@@ -281,16 +281,6 @@ Your FriendBook project is now:
 
 ---
 
-## 📞 Support
-
-If evaluators have questions, refer them to:
-- **README.md** - General overview
-- **API.md** - API details
-- **TECHNICAL.md** - Deep technical info
-- **PRESENTATION.md** - Presentation guide
-
----
-
 ## 🏆 Final Note
 
 This project represents **production-quality work** that goes beyond typical academic projects. The combination of:
