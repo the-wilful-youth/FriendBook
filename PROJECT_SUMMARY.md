@@ -283,14 +283,40 @@ All configurations included in repository!
 
 **Team ADAPT (DS-III-T005)**
 
-| Member | Roll No | Contribution |
-|--------|---------|--------------|
-| **Anurag Bhowmick** | 240211698 | **Primary Developer** - Complete implementation of all features including data structures (Graph, Hash Table, Queue), algorithms (BFS, DFS), CLI application (C), web application (Node.js/Express), API development, database design, security implementation, deployment configuration, and all documentation (75+ pages) |
-| Tanishk Gupta | 240111241 | Team Member |
-| Prajjwal Singh | 240111017 | Team Member |
-| Divyanshi Singh | 240221677 | Team Member |
+| Name | Roll Number | Email | Role |
+|------|-------------|-------|------|
+| **Bhowmick, Anurag** | 240211698 | anuragbhowmick1711@gmail.com | **Team Lead & Primary Developer** |
+| Gupta, Tanishk | 240111241 | tanishkg232@gmail.com | Team Member |
+| Singh, Prajjwal | 240111017 | prajjwalsingh8705@gmail.com | Team Member |
+| Singh, Divyanshi | 240221677 | dnshi235@gmail.com | Team Member |
 
-**Note**: The majority of the development work, including all core features, data structures implementation, web application, documentation, and deployment was completed by Anurag Bhowmick.
+### Task Distribution
+
+| # | Task Completed | Team Member |
+|---|----------------|-------------|
+| 1 | **System Design and Modular Architecture Setup**: Defined the FriendBook system structure, identifying and modularizing key components such as User Management, Authentication, Graph-based Friendships, Request Handling, Suggestion Engine, and Database Synchronization. | Gupta, Tanishk |
+| 2 | **User Management and Authentication Module**: Implemented user registration, login, and authentication logic using Linked Lists and Hash Tables. Integrated SQLite database for persistent storage and improved data reliability. | Bhowmick, Anurag |
+| 3 | **Graph Module (Friendship Network)**: Developed an adjacency list–based Graph structure to represent user connections. Implemented add, remove, and traversal operations for managing dynamic friendships efficiently. | Singh, Divyanshi |
+| 4 | **Friend Request System (Queue Implementation)**: Designed and implemented a Queue-based module for sending, receiving, and accepting friend requests, ensuring proper sequencing and state management of each request. | Singh, Prajjwal |
+| 5 | **Friend Suggestion Engine**: Built a recommendation system using Breadth-First Search (BFS) and Depth-First Search (DFS) algorithms to identify mutual friends and suggest new connections dynamically. | Bhowmick, Anurag |
+| 6 | **Database Integration and File I/O Upgrade**: Transitioned from file-based persistence to SQLite database integration, adding automatic table creation, data loading, and saving functions for all modules. | Gupta, Tanishk |
+| 7 | **CLI Interface Development**: Designed a visually enhanced Command-Line Interface (CLI) with color formatting, structured menus, and improved user feedback for registration, login, and friend management. | Singh, Prajjwal |
+| 8 | **Web Interface Integration (Hybrid System)**: Extended the system with a Node.js (Express.js) and TailwindCSS-based web layer for real-time data visualization, improving accessibility and user interaction. | Bhowmick, Anurag |
+
+**Primary Developer - Anurag Bhowmick (240211698)**
+
+Complete implementation and development of:
+- All data structures (Graph, Hash Table, Queue, Linked List)
+- All algorithms (BFS, DFS, Hash Function, Suggestion Algorithm)
+- CLI application (8 C source files + 7 headers)
+- Web application (Node.js/Express, API, Frontend)
+- Database design and integration (SQLite, Turso)
+- Security implementation (7+ features)
+- Deployment configuration (Render, Railway)
+- Testing and validation (8 test types)
+- Complete documentation (75+ pages)
+
+**Total Contribution**: 100% of development, implementation, testing, and documentation
 
 ---
 

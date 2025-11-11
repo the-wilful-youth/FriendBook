@@ -2,8 +2,9 @@
 
 ## Primary Developer
 
-### Anurag Bhowmick (240211698) - Team Lead
-**Role**: Project Lead & Primary Developer
+### Bhowmick, Anurag (240211698) - Team Lead
+**Role**: Team Lead & Primary Developer  
+**Email**: anuragbhowmick1711@gmail.com
 
 **Complete Implementation and Development**:
 
@@ -85,6 +86,7 @@
 
 **Contact**: 
 - Roll Number: 240211698
+- Name: Bhowmick, Anurag
 - Email: anuragbhowmick1711@gmail.com
 - GitHub: [@the-wilful-youth](https://github.com/the-wilful-youth)
 
@@ -92,13 +94,13 @@
 
 ## Team Members
 
-### Tanishk Gupta (240111241)
+### Gupta, Tanishk (240111241)
 **Email**: tanishkg232@gmail.com
 
-### Prajjwal Singh (240111017)
+### Singh, Prajjwal (240111017)
 **Email**: prajjwalsingh8705@gmail.com
 
-### Divyanshi Singh (240221677)
+### Singh, Divyanshi (240221677)
 **Email**: dnshi235@gmail.com
 
 ---

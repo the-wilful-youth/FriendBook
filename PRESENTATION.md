@@ -319,13 +319,16 @@ Overall: O(V + E) using BFS
 
 ## 📞 Contact for Questions
 
-**Team ADAPT**
-- **Anurag Bhowmick (240211698)** - Primary Developer & Project Lead
-- Tanishk Gupta (240111241)
-- Prajjwal Singh (240111017)
-- Divyanshi Singh (240221677)
+**Team ADAPT (DS-III-T005)**
 
-**Primary Contact**: Anurag Bhowmick - Complete development and implementation
+| Name | Roll Number | Email |
+|------|-------------|-------|
+| **Bhowmick, Anurag** (Team Lead) | 240211698 | anuragbhowmick1711@gmail.com |
+| Gupta, Tanishk | 240111241 | tanishkg232@gmail.com |
+| Singh, Prajjwal | 240111017 | prajjwalsingh8705@gmail.com |
+| Singh, Divyanshi | 240221677 | dnshi235@gmail.com |
+
+**Primary Developer & Contact**: Anurag Bhowmick - Complete development and implementation
 
 ---
 
