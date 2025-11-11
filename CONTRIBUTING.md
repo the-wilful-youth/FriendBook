@@ -302,7 +302,6 @@ Mockups, examples, etc.
 ## 🙏 Recognition
 
 **Primary Developer**: Anurag Bhowmick (240211698)
-- Name: Bhowmick, Anurag
 - Email: anuragbhowmick1711@gmail.com
 - Complete implementation of FriendBook
 - All data structures and algorithms
