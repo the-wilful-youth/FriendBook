@@ -26,11 +26,13 @@
 4. **Add Environment Variables:**
    Go to "Environment" tab and add:
    ```
-   TURSO_DATABASE_URL=libsql://friendbook-thewilfulyouth.aws-ap-south-1.turso.io
-   TURSO_AUTH_TOKEN=<your_token_from_.env>
-   JWT_SECRET=friendbook-jwt-secret-key-2024
+   TURSO_DATABASE_URL=<your_turso_database_url>
+   TURSO_AUTH_TOKEN=<your_turso_auth_token>
+   JWT_SECRET=<your_secure_jwt_secret>
    NODE_ENV=production
    ```
+   
+   **Note**: Use your actual Turso credentials from `.env` file
 
 5. **Deploy!** Render will automatically build and deploy your app.
 
@@ -50,11 +52,13 @@
 4. **Add Environment Variables:**
    In Railway dashboard → Variables tab:
    ```
-   TURSO_DATABASE_URL=libsql://friendbook-thewilfulyouth.aws-ap-south-1.turso.io
-   TURSO_AUTH_TOKEN=<your_token>
-   JWT_SECRET=friendbook-jwt-secret-key-2024
+   TURSO_DATABASE_URL=<your_turso_database_url>
+   TURSO_AUTH_TOKEN=<your_turso_auth_token>
+   JWT_SECRET=<your_secure_jwt_secret>
    NODE_ENV=production
    ```
+   
+   **Note**: Use your actual Turso credentials from `.env` file
 
 5. **Deploy!** Railway automatically deploys on push.
 
@@ -90,13 +94,9 @@ Before deploying:
 
 ## 🗄️ Database (Turso)
 
-Your app is already configured to use Turso online database!
+Your app uses Turso cloud database for production.
 
-**Current Database:**
-- URL: `libsql://friendbook-thewilfulyouth.aws-ap-south-1.turso.io`
-- Region: AWS ap-south-1 (Mumbai)
-
-**To create a new Turso database:**
+**To create your own Turso database:**
 ```bash
 # Install Turso CLI
 curl -sSfL https://get.tur.so/install.sh | bash
@@ -111,6 +111,8 @@ turso db create friendbook
 turso db show friendbook --url
 turso db tokens create friendbook
 ```
+
+**Then add these credentials to your `.env` file and deployment platform environment variables.**
 
 ---
 
