@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🎉 Initial Release
 
 #### Added
+
 - **CLI Application (C)**
   - User registration and login system
   - Friend request management (send, accept, reject)
@@ -19,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Graph-based friend network using adjacency lists
   - Hash table for fast user lookup
   - Local SQLite database integration
-  
 - **Web Application (Node.js)**
   - RESTful API with Express.js
   - JWT-based authentication
@@ -31,13 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Local SQLite fallback mechanism
   - Rate limiting and security middleware
   - Responsive web interface
-  
 - **Data Structures**
   - Graph implementation with adjacency lists
   - Hash table with chaining for collision resolution
   - Queue for BFS traversal
   - Linked lists for various operations
-  
 - **Security Features**
   - Password hashing with bcrypt (10 rounds)
   - JWT token authentication (24-hour expiry)
@@ -46,25 +44,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Rate limiting (1000 requests/15 minutes)
   - Helmet.js security headers
   - CORS protection
-  
 - **Database**
   - Dual database support (Turso + SQLite)
   - Automatic failover mechanism
   - Database retry logic with exponential backoff
   - Optimized SQLite pragmas for local database
-  
 - **Documentation**
   - Comprehensive README with architecture diagrams
   - API documentation with examples
   - Deployment guide for multiple platforms
   - Contributing guidelines
   - Environment configuration examples
-  
 - **Build System**
   - Makefile for CLI compilation
   - npm scripts for web application
   - Optimized compiler flags (O3, LTO, native)
-  
 - **Deployment**
   - Render.com configuration (render.yaml)
   - Railway.app configuration (railway.json)
@@ -74,12 +68,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Features in Detail
 
 **Friend Suggestions Algorithm:**
+
 - BFS-based mutual friends calculation
 - Excludes current friends and pending requests
 - Ranking by mutual friend count
 - Top 10 suggestions with randomness for variety
 
 **Admin Capabilities:**
+
 - View all users
 - Create new users
 - Delete users (cascading deletes)
@@ -87,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User statistics and analytics
 
 **Web Interface:**
+
 - Clean, modern UI with responsive design
 - Real-time friend request notifications
 - User search functionality
@@ -112,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned Features
+
 - Real-time WebSocket notifications
 - User profile pictures
 - Friend activity feed
@@ -124,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Blocked users functionality
 
 ### Future Improvements
+
 - Performance optimization for large friend networks
 - Caching layer for frequently accessed data
 - GraphQL API option
@@ -138,6 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version History
 
 ### [1.0.0] - 2024-11-11
+
 - Initial release with core features
 
 ---
@@ -145,22 +145,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Development Notes
 
 ### Breaking Changes
+
 None (initial release)
 
 ### Migration Guide
+
 Not applicable (initial release)
 
 ### Dependencies Updates
+
 See `package.json` and `Makefile` for current dependency versions.
 
 ---
 
 ## Contributors
 
-**Primary Developer**:
-- **Anurag Bhowmick (240211698)** - Complete implementation of all features, data structures, algorithms, CLI, web application, API, database, security, deployment, and documentation
-
 **Team Members**:
+
+- Anurag Bhowmick (240211698)
 - Tanishk Gupta (240111241)
 - Prajjwal Singh (240111017)
 - Divyanshi Singh (240221677)

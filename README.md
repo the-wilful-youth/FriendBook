@@ -491,7 +491,7 @@ Where:
 
 ## 📝 License
 
-This project is part of an academic assignment for **TCS-302: Data Structures in C**.
+This project is part of an academic Project for **TCS-302: Data Structures in C**.
 
 ---
 

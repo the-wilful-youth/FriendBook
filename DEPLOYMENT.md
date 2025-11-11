@@ -5,6 +5,7 @@
 ### Option 1: Deploy to Render (Recommended)
 
 1. **Push your code to GitHub** (if not already done)
+
    ```bash
    git add .
    git commit -m "Prepare for deployment"
@@ -14,6 +15,7 @@
 2. **Sign up at [Render.com](https://render.com)**
 
 3. **Create a new Web Service:**
+
    - Click "New +" → "Web Service"
    - Connect your GitHub repository
    - Configure:
@@ -25,13 +27,14 @@
 
 4. **Add Environment Variables:**
    Go to "Environment" tab and add:
+
    ```
    TURSO_DATABASE_URL=<your_turso_database_url>
    TURSO_AUTH_TOKEN=<your_turso_auth_token>
    JWT_SECRET=<your_secure_jwt_secret>
    NODE_ENV=production
    ```
-   
+
    **Note**: Use your actual Turso credentials from `.env` file
 
 5. **Deploy!** Render will automatically build and deploy your app.
@@ -45,19 +48,21 @@
 2. **Sign up at [Railway.app](https://railway.app)**
 
 3. **Create New Project:**
+
    - Click "New Project" → "Deploy from GitHub repo"
    - Select your FriendBook repository
    - Railway will auto-detect it's a Node.js app
 
 4. **Add Environment Variables:**
    In Railway dashboard → Variables tab:
+
    ```
    TURSO_DATABASE_URL=<your_turso_database_url>
    TURSO_AUTH_TOKEN=<your_turso_auth_token>
    JWT_SECRET=<your_secure_jwt_secret>
    NODE_ENV=production
    ```
-   
+
    **Note**: Use your actual Turso credentials from `.env` file
 
 5. **Deploy!** Railway automatically deploys on push.
@@ -67,11 +72,13 @@
 ### Option 3: Deploy to Vercel (Serverless)
 
 1. **Install Vercel CLI:**
+
    ```bash
    npm install -g vercel
    ```
 
 2. **Deploy:**
+
    ```bash
    cd web
    vercel
@@ -97,6 +104,7 @@ Before deploying:
 Your app uses Turso cloud database for production.
 
 **To create your own Turso database:**
+
 ```bash
 # Install Turso CLI
 curl -sSfL https://get.tur.so/install.sh | bash
@@ -143,14 +151,17 @@ Access at: http://localhost:3000
 ## 🔧 Common Issues
 
 **Issue: Database connection fails**
+
 - Check TURSO_DATABASE_URL and TURSO_AUTH_TOKEN are set correctly
 - App will fallback to local SQLite if Turso fails
 
 **Issue: Build fails**
+
 - Ensure `cd web && npm install` runs successfully locally
 - Check Node version (should be 16+)
 
 **Issue: App crashes on startup**
+
 - Check logs in hosting platform dashboard
 - Verify all environment variables are set
 
@@ -179,6 +190,7 @@ For production with guaranteed uptime, upgrade to paid plans ($7-20/month).
 ## 🎯 Recommended: Render
 
 For FriendBook, I recommend **Render** because:
+
 - ✅ Simple setup with `render.yaml`
 - ✅ Great free tier
 - ✅ Persistent disk support

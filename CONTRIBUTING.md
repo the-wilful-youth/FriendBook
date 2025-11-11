@@ -32,6 +32,7 @@ Thank you for your interest in contributing to FriendBook! This document provide
 ## 💻 Development Setup
 
 ### Prerequisites
+
 ```bash
 # C Development
 gcc >= 9.0
@@ -44,6 +45,7 @@ npm >= 8.0
 ```
 
 ### Local Development
+
 ```bash
 # Install dependencies
 make all
@@ -58,6 +60,7 @@ cd web && npm run dev
 ## 📝 Coding Standards
 
 ### C Code (CLI)
+
 ```c
 // Use descriptive variable names
 int userCount = 0;  // Good
@@ -82,28 +85,30 @@ void findMutualFriends() {
 ```
 
 ### JavaScript Code (Web)
+
 ```javascript
 // Use ES6+ features
-const user = await db.get('SELECT * FROM users WHERE id = ?', [id]);
+const user = await db.get("SELECT * FROM users WHERE id = ?", [id]);
 
 // Async/await over callbacks
 async function getUsers() {
-    // Good
+  // Good
 }
 
 // Proper error handling
 try {
-    await operation();
+  await operation();
 } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'Server error' });
+  console.error("Error:", error);
+  res.status(500).json({ error: "Server error" });
 }
 
 // Descriptive function names
-function validateUserInput() { }
+function validateUserInput() {}
 ```
 
 ### File Structure
+
 ```
 - One feature per file
 - Keep functions focused and small
@@ -114,6 +119,7 @@ function validateUserInput() { }
 ## 📦 Commit Guidelines
 
 ### Commit Message Format
+
 ```
 <type>(<scope>): <subject>
 
@@ -123,6 +129,7 @@ function validateUserInput() { }
 ```
 
 ### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -132,6 +139,7 @@ function validateUserInput() { }
 - `chore`: Build process or auxiliary tool changes
 
 ### Examples
+
 ```bash
 feat(auth): add JWT token refresh mechanism
 
@@ -158,6 +166,7 @@ troubleshooting scenarios.
 ## 🔍 Pull Request Process
 
 1. **Before Submitting**
+
    - Update documentation if needed
    - Add tests for new features
    - Ensure all tests pass
@@ -165,9 +174,10 @@ troubleshooting scenarios.
    - Follow coding standards
 
 2. **PR Title Format**
+
    ```
    [Type] Brief description
-   
+
    Examples:
    [Feature] Add user profile picture upload
    [Fix] Resolve friend request duplication bug
@@ -175,24 +185,29 @@ troubleshooting scenarios.
    ```
 
 3. **PR Description Template**
+
    ```markdown
    ## Description
+
    Brief description of changes
-   
+
    ## Type of Change
+
    - [ ] Bug fix
    - [ ] New feature
    - [ ] Documentation update
    - [ ] Performance improvement
-   
+
    ## Testing
+
    - [ ] Tested locally
    - [ ] Added unit tests
    - [ ] All tests passing
-   
+
    ## Screenshots (if applicable)
-   
+
    ## Checklist
+
    - [ ] Code follows style guidelines
    - [ ] Self-review completed
    - [ ] Comments added for complex code
@@ -209,6 +224,7 @@ troubleshooting scenarios.
 ## 🧪 Testing Guidelines
 
 ### CLI Testing
+
 ```bash
 # Compile and run
 make clean && make cli
@@ -223,6 +239,7 @@ make clean && make cli
 ```
 
 ### Web Testing
+
 ```bash
 # Run development server
 cd web && npm run dev
@@ -239,6 +256,7 @@ cd web && npm run dev
 ## 🐛 Bug Reports
 
 ### Required Information
+
 - FriendBook version
 - Operating system
 - Steps to reproduce
@@ -248,8 +266,10 @@ cd web && npm run dev
 - Error messages
 
 ### Template
+
 ```markdown
 **Environment**
+
 - OS: [e.g., macOS 12.0]
 - Version: [e.g., 1.0.0]
 - Interface: [CLI/Web]
@@ -258,6 +278,7 @@ cd web && npm run dev
 Clear description
 
 **To Reproduce**
+
 1. Step 1
 2. Step 2
 3. ...
@@ -275,6 +296,7 @@ Any other relevant information
 ## 💡 Feature Requests
 
 ### Template
+
 ```markdown
 **Feature Description**
 Clear description of the feature
@@ -298,27 +320,6 @@ Mockups, examples, etc.
 - [JavaScript Style Guide](https://github.com/airbnb/javascript)
 - [Semantic Versioning](https://semver.org/)
 - [Keep a Changelog](https://keepachangelog.com/)
-
-## 🙏 Recognition
-
-**Primary Developer**: Anurag Bhowmick (240211698)
-- Email: anuragbhowmick1711@gmail.com
-- Complete implementation of FriendBook
-- All data structures and algorithms
-- CLI and Web applications
-- Database design and security
-- Comprehensive documentation
-
-Future contributors will be:
-- Added to CONTRIBUTORS.md
-- Mentioned in release notes
-- Credited in documentation
-
-## 📞 Questions?
-
-- Open a discussion on GitHub
-- Contact team members
-- Check existing issues and PRs
 
 ---
 
