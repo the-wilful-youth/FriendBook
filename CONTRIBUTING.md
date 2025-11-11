@@ -301,7 +301,14 @@ Mockups, examples, etc.
 
 ## 🙏 Recognition
 
-Contributors will be:
+**Primary Developer**: Anurag Bhowmick (240211698)
+- Complete implementation of FriendBook
+- All data structures and algorithms
+- CLI and Web applications
+- Database design and security
+- Comprehensive documentation
+
+Future contributors will be:
 - Added to CONTRIBUTORS.md
 - Mentioned in release notes
 - Credited in documentation

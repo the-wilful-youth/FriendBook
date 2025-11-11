@@ -307,5 +307,6 @@ This project represents **production-quality work** that goes beyond typical aca
 ---
 
 **Prepared by**: Team ADAPT (DS-III-T005)  
+**Primary Developer**: Anurag Bhowmick (240211698)  
 **Date**: November 11, 2024  
 **Version**: 1.0.0
