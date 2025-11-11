@@ -320,10 +320,12 @@ Overall: O(V + E) using BFS
 ## 📞 Contact for Questions
 
 **Team ADAPT**
-- Anurag Bhowmick (240211698)
+- **Anurag Bhowmick (240211698)** - Primary Developer & Project Lead
 - Tanishk Gupta (240111241)
 - Prajjwal Singh (240111017)
 - Divyanshi Singh (240221677)
+
+**Primary Contact**: Anurag Bhowmick - Complete development and implementation
 
 ---
 

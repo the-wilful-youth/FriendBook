@@ -470,10 +470,12 @@ This project is part of an academic assignment for **TCS-302: Data Structures in
 
 | Name | Roll Number | Role |
 |------|-------------|------|
-| Anurag Bhowmick | 240211698 | Team Lead & Backend |
-| Tanishk Gupta | 240111241 | Data Structures & CLI |
-| Prajjwal Singh | 240111017 | Frontend & UI/UX |
-| Divyanshi Singh | 240221677 | Database & Testing |
+| Anurag Bhowmick | 240211698 | **Project Lead** - Full Stack Development, Data Structures, CLI, Web, Database, Documentation, Deployment |
+| Tanishk Gupta | 240111241 | Team Member |
+| Prajjwal Singh | 240111017 | Team Member |
+| Divyanshi Singh | 240221677 | Team Member |
+
+**Primary Contributor**: Anurag Bhowmick (240211698) - Developed the complete application including all data structures, algorithms, CLI implementation, web application, API, database design, security features, and comprehensive documentation.
 
 ---
 

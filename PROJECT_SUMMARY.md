@@ -285,10 +285,12 @@ All configurations included in repository!
 
 | Member | Roll No | Contribution |
 |--------|---------|--------------|
-| Anurag Bhowmick | 240211698 | Team Lead, Backend, Documentation |
-| Tanishk Gupta | 240111241 | Data Structures, CLI |
-| Prajjwal Singh | 240111017 | Frontend, UI/UX |
-| Divyanshi Singh | 240221677 | Database, Testing |
+| **Anurag Bhowmick** | 240211698 | **Primary Developer** - Complete implementation of all features including data structures (Graph, Hash Table, Queue), algorithms (BFS, DFS), CLI application (C), web application (Node.js/Express), API development, database design, security implementation, deployment configuration, and all documentation (75+ pages) |
+| Tanishk Gupta | 240111241 | Team Member |
+| Prajjwal Singh | 240111017 | Team Member |
+| Divyanshi Singh | 240221677 | Team Member |
+
+**Note**: The majority of the development work, including all core features, data structures implementation, web application, documentation, and deployment was completed by Anurag Bhowmick.
 
 ---
 

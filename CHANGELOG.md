@@ -157,7 +157,10 @@ See `package.json` and `Makefile` for current dependency versions.
 
 ## Contributors
 
-- Anurag Bhowmick (240211698)
+**Primary Developer**:
+- **Anurag Bhowmick (240211698)** - Complete implementation of all features, data structures, algorithms, CLI, web application, API, database, security, deployment, and documentation
+
+**Team Members**:
 - Tanishk Gupta (240111241)
 - Prajjwal Singh (240111017)
 - Divyanshi Singh (240221677)
