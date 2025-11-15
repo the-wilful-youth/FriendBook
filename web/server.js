@@ -286,6 +286,7 @@ app.get('/api/smart-suggestions/:userId', auth, async (req, res) => {
             WHERE user1_id = ? OR user2_id = ?
         `, [userId, userId, userId]);
         
+        const friendIds = new Set(userFriends.map(f => f.friend_id));
         const userFriendCount = friendIds.size;
         
         // Get pending/sent requests to exclude
