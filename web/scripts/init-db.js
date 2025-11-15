@@ -71,15 +71,19 @@ db.serialize(() => {
         stmt.finalize();
         console.log('Friendships imported successfully!');
     }
-    db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
+    db.get("SELECT COUNT(*) as count FROM users WHERE username = 'admin'", (err, row) => {
         if (!err && row.count === 0) {
             const hashedPassword = bcrypt.hashSync('admin123', 10);
             db.run("INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)", 
                    ['admin', 'System', 'Administrator', hashedPassword, 1], function(err) {
                 if (!err) {
                     console.log('Default admin created: username="admin", password="admin123"');
+                } else if (err.message.includes('UNIQUE constraint')) {
+                    console.log('Admin user already exists, skipping creation.');
                 }
             });
+        } else {
+            console.log('Admin user already exists.');
         }
     });
 });

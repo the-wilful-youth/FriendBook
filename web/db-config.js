@@ -61,9 +61,17 @@ class DatabaseWrapper {
             try {
                 return await operation();
             } catch (error) {
-                console.log(`Database operation failed (attempt ${i + 1}/${this.maxRetries}):`, error.message);
+                // Don't log UNIQUE constraint errors (expected when data exists)
+                if (!error.message.includes('UNIQUE constraint')) {
+                    console.log(`Database operation failed (attempt ${i + 1}/${this.maxRetries}):`, error.message);
+                }
                 
                 if (i === this.maxRetries - 1) {
+                    // UNIQUE constraint errors are not fatal - just skip
+                    if (error.message.includes('UNIQUE constraint')) {
+                        return null;
+                    }
+                    
                     if (this.isOnline) {
                         console.log('🔄 Falling back to local database');
                         this.isOnline = false;
@@ -71,6 +79,11 @@ class DatabaseWrapper {
                         return await operation();
                     }
                     throw error;
+                }
+                
+                // Don't retry on UNIQUE constraint errors
+                if (error.message.includes('UNIQUE constraint')) {
+                    return null;
                 }
                 
                 // Wait before retry

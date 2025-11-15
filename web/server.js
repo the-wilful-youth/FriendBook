@@ -12,6 +12,9 @@ const { DatabaseWrapper } = require('./db-config');
 const app = express();
 const db = new DatabaseWrapper();
 
+// Trust proxy for deployment on Render/Railway/etc
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -31,7 +34,9 @@ app.use(helmet({
 }));
 app.use(rateLimit({ 
     windowMs: 15 * 60 * 1000, 
-    max: 1000  // Increased from 100 to 1000 requests per 15 minutes
+    max: 1000,  // Increased from 100 to 1000 requests per 15 minutes
+    standardHeaders: true,
+    legacyHeaders: false
 }));
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
