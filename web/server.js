@@ -281,7 +281,7 @@ app.get('/api/smart-suggestions/:userId', auth, async (req, res) => {
             WHERE user1_id = ? OR user2_id = ?
         `, [userId, userId, userId]);
         
-        const friendIds = new Set(userFriends.map(f => f.friend_id));
+        const userFriendCount = friendIds.size;
         
         // Get pending/sent requests to exclude
         const [sentRequests, receivedRequests] = await Promise.all([
@@ -296,37 +296,84 @@ app.get('/api/smart-suggestions/:userId', auth, async (req, res) => {
             ...receivedRequests.map(r => r.sender_id)
         ]);
         
-        // Get all users except excluded ones
-        const allUsers = await db.query('SELECT id, username, firstName, lastName FROM users WHERE isAdmin = 0');
+        // Get all users with friend count
+        const allUsers = await db.query(`
+            SELECT u.id, u.username, u.firstName, u.lastName,
+                   (SELECT COUNT(*) FROM friendships f 
+                    WHERE f.user1_id = u.id OR f.user2_id = u.id) as friend_count
+            FROM users u 
+            WHERE u.isAdmin = 0
+        `);
         const potentialSuggestions = allUsers.filter(user => !excludeIds.has(user.id));
         
-        // Calculate mutual friends for each suggestion
-        const suggestionsWithMutuals = await Promise.all(
+        // Calculate enhanced scores for suggestions
+        const suggestionsWithScores = await Promise.all(
             potentialSuggestions.map(async (user) => {
-                // Find mutual friends between current user and this potential friend
-                const mutualFriends = await db.query(`
-                    SELECT COUNT(*) as count FROM friendships f1
-                    JOIN friendships f2 ON (
-                        (f1.user1_id = f2.user1_id OR f1.user1_id = f2.user2_id OR 
-                         f1.user2_id = f2.user1_id OR f1.user2_id = f2.user2_id)
-                    )
-                    WHERE (f1.user1_id = ? OR f1.user2_id = ?)
-                    AND (f2.user1_id = ? OR f2.user2_id = ?)
-                    AND f1.id != f2.id
-                `, [userId, userId, user.id, user.id]);
+                // Count mutual friends
+                let mutualCount = 0;
+                const candidateFriends = await db.query(`
+                    SELECT CASE 
+                        WHEN user1_id = ? THEN user2_id 
+                        ELSE user1_id 
+                    END as friend_id
+                    FROM friendships 
+                    WHERE user1_id = ? OR user2_id = ?
+                `, [user.id, user.id, user.id]);
+                
+                const candidateFriendIds = new Set(candidateFriends.map(f => f.friend_id));
+                for (const fid of friendIds) {
+                    if (candidateFriendIds.has(fid)) mutualCount++;
+                }
+                
+                // Calculate network distance
+                let distance = mutualCount > 0 ? 2 : 0;
+                
+                // Calculate smart score using multiple factors
+                let score = 0;
+                
+                // Factor 1: Mutual friends (50% weight)
+                score += mutualCount * 5.0;
+                
+                // Factor 2: Network distance (20% weight)
+                if (distance === 2) {
+                    score += 3.0;
+                }
+                
+                // Factor 3: Balanced popularity (15% weight)
+                if (userFriendCount > 0) {
+                    const popularityRatio = user.friend_count / userFriendCount;
+                    const balancedRatio = popularityRatio > 1 ? 1 / popularityRatio : popularityRatio;
+                    score += balancedRatio * 2.0;
+                }
+                
+                // Factor 4: Active user bonus (15% weight)
+                if (user.friend_count >= 2 && user.friend_count <= 20) {
+                    score += 2.0;
+                } else if (user.friend_count > 20) {
+                    score += 0.5;
+                }
+                
+                // Add small randomness for variety
+                score += Math.random() * 0.5;
                 
                 return {
-                    ...user,
-                    mutual_friends: mutualFriends[0]?.count || 0,
-                    suggestion_score: (mutualFriends[0]?.count || 0) * 10 + Math.random() * 5
+                    id: user.id,
+                    username: user.username,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    mutual_friends: mutualCount,
+                    friend_count: user.friend_count,
+                    distance: distance,
+                    suggestion_score: score
                 };
             })
         );
         
-        // Sort by suggestion score (mutual friends + randomness for variety)
-        const rankedSuggestions = suggestionsWithMutuals
+        // Filter and sort suggestions
+        const rankedSuggestions = suggestionsWithScores
+            .filter(s => s.mutual_friends > 0 || s.distance === 2) // Only meaningful connections
             .sort((a, b) => b.suggestion_score - a.suggestion_score)
-            .slice(0, 10);
+            .slice(0, 12); // Increased from 10 for better variety
         
         res.json(rankedSuggestions);
     } catch (error) {
