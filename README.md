@@ -16,15 +16,15 @@ _CLI & Web Interface | Shared Online Database | Advanced Friend Suggestions_
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [Data Structures Used](#data-structures-used)
-- [API Documentation](#api-documentation)
-- [Deployment](#deployment)
-- [Team](#team)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#️-tech-stack)
+- [Quick Start](#-quick-start)
+- [Architecture](#️-architecture)
+- [Data Structures Used](#-data-structures-used)
+- [API Documentation](#-api-documentation)
+- [Deployment](#-deployment)
+- [Team](#-team)
 
 ---
 
