@@ -142,9 +142,6 @@ Access at: http://localhost:3000
 
 1. **Get your app URL** from hosting platform dashboard
 2. **Update FRONTEND_URL** environment variable to your production URL
-3. **Test the admin login:**
-   - Username: `admin`
-   - Password: `admin123`
 
 ---
 
