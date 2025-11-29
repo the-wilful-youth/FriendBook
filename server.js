@@ -7,6 +7,8 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const { body, param, validationResult } = require('express-validator');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { DatabaseWrapper } = require('./db-config');
 
 const app = express();
@@ -61,6 +63,25 @@ const validate = (req, res, next) => {
     next();
 };
 
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = 'public/uploads';
+        if (!fs.existsSync(uploadDir)){
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 async function initDatabase() {
     try {
@@ -86,9 +107,32 @@ async function initDatabase() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_id INTEGER NOT NULL,
             receiver_id INTEGER NOT NULL,
-            status TEXT DEFAULT 'pending',\n            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            status TEXT DEFAULT 'pending',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(sender_id, receiver_id)
         )`);
+
+        await db.run(`CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sender_id INTEGER NOT NULL,
+            receiver_id INTEGER NOT NULL,
+            content TEXT,
+            type TEXT DEFAULT 'text',
+            media_url TEXT,
+            file_name TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(sender_id) REFERENCES users(id),
+            FOREIGN KEY(receiver_id) REFERENCES users(id)
+        )`);
+        
+        // Attempt to add columns if table exists (migration for existing dev db)
+        try {
+            await db.run("ALTER TABLE messages ADD COLUMN type TEXT DEFAULT 'text'");
+            await db.run("ALTER TABLE messages ADD COLUMN media_url TEXT");
+            await db.run("ALTER TABLE messages ADD COLUMN file_name TEXT");
+        } catch (e) {
+            // Columns likely exist, ignore
+        }
         
         console.log('✅ Database tables initialized');
 
@@ -156,6 +200,30 @@ app.post('/api/register', [
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Registration failed' });
+    }
+});
+
+app.post('/api/change-password', [
+    body('currentPassword').trim().notEmpty().isLength({ min: 1, max: 100 }),
+    body('newPassword').trim().isLength({ min: 6, max: 100 })
+], validate, auth, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+    
+    try {
+        const user = await db.get('SELECT password FROM users WHERE id = ?', [userId]);
+        
+        if (!user || !await bcrypt.compare(currentPassword, user.password)) {
+            return res.status(401).json({ error: 'Incorrect current password' });
+        }
+        
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+        
+        res.json({ success: true, message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ error: 'Failed to update password' });
     }
 });
 
@@ -274,6 +342,35 @@ app.delete('/api/remove-friend', [
     } catch (error) {
         console.error('Database error:', error);
         res.status(500).json({ error: 'Failed to remove friend' });
+    }
+});
+
+// Get chat history
+app.get('/api/messages/:friendId', auth, async (req, res) => {
+    const userId = req.user.id;
+    const friendId = parseInt(req.params.friendId);
+    
+    try {
+        // Verify friendship first
+        const friendship = await db.get(`
+            SELECT * FROM friendships 
+            WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
+        `, [userId, friendId, friendId, userId]);
+        
+        if (!friendship) {
+            return res.status(403).json({ error: 'Not friends' });
+        }
+        
+        const messages = await db.query(`
+            SELECT * FROM messages 
+            WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
+            ORDER BY created_at ASC
+        `, [userId, friendId, friendId, userId]);
+        
+        res.json(messages);
+    } catch (error) {
+        console.error('Fetch messages error:', error);
+        res.status(500).json({ error: 'Failed to fetch messages' });
     }
 });
 
@@ -444,8 +541,124 @@ app.delete('/api/admin/clear', auth, adminAuth, async (req, res) => {
     }
 });
 
+// Serve admin panel
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// SPA Catch-all: Serve index.html for any other non-API routes
+app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`🚀 FriendBook server running on port ${PORT}`);
     console.log(`🌐 ${db.isOnline ? 'Using Turso online database' : 'Using local SQLite database'}`);
+});
+
+// Initialize Socket.io
+const io = require('socket.io')(server, {
+    cors: {
+        origin: "*", // Adjust this to your client's origin in production
+        methods: ["GET", "POST"]
+    }
+});
+
+// Socket.io Middleware for Authentication
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) {
+        return next(new Error('Authentication error'));
+    }
+    
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return next(new Error('Authentication error'));
+        }
+        socket.user = decoded;
+        next();
+    });
+});
+
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.user.username);
+    
+    // Join user to their own room for receiving messages
+    socket.join(`user_${socket.user.id}`);
+    
+    socket.on('private_message', async (data, callback) => {
+        const { toUserId, content, type = 'text', mediaUrl, fileName } = data;
+        const fromUserId = socket.user.id;
+        
+        // Helper to send ack if callback exists
+        const sendAck = (response) => {
+            if (typeof callback === 'function') callback(response);
+        };
+
+        try {
+            console.log(`Processing message from ${fromUserId} to ${toUserId} type:${type}`);
+            
+            // Verify friendship
+            const friendship = await db.get(`
+                SELECT * FROM friendships 
+                WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
+            `, [fromUserId, toUserId, toUserId, fromUserId]);
+            
+            if (!friendship) {
+                console.log('Friendship verification failed');
+                sendAck({ status: 'error', message: 'You are not friends with this user' });
+                return;
+            }
+            
+            // Save message to DB
+            const result = await db.run(
+                'INSERT INTO messages (sender_id, receiver_id, content, type, media_url, file_name) VALUES (?, ?, ?, ?, ?, ?)',
+                [fromUserId, toUserId, content || '', type, mediaUrl || null, fileName || null]
+            );
+            
+            const messageData = {
+                id: result.id,
+                sender_id: fromUserId,
+                receiver_id: toUserId,
+                content: content || '',
+                type: type,
+                media_url: mediaUrl,
+                file_name: fileName,
+                created_at: new Date().toISOString()
+            };
+            
+            // Emit to receiver
+            io.to(`user_${toUserId}`).emit('new_message', messageData);
+            
+            // Send success ack to sender
+            sendAck({ status: 'ok', data: messageData });
+            
+        } catch (error) {
+            console.error('Message error:', error);
+            sendAck({ status: 'error', message: 'Failed to send message' });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.user.username);
+    });
+});
+
+// File Upload Endpoint
+app.post('/api/chat/upload', auth, upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    // Return the file URL
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ 
+        url: fileUrl,
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype
+    });
 });

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FriendBook - Social Network</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -48,8 +51,12 @@
                 <div class="nav-brand">
                     <h2>FriendBook</h2>
                 </div>
+
                 <div class="nav-user">
                     <span id="user-name"></span>
+                    <button onclick="showChangePasswordModal()" class="nav-icon-btn" title="Change Password">
+                        <span class="icon">🔐</span>
+                    </button>
                     <button onclick="logout()" class="logout-btn">Logout</button>
                 </div>
             </nav>
@@ -69,9 +76,12 @@
                         <button class="menu-btn" onclick="showSection('suggestions')">
                             <span class="icon">💡</span> Suggestions
                         </button>
-                        <button class="menu-btn" onclick="showSection('users')" id="users-menu" style="display: none;">
-                            <span class="icon">👤</span> All Users
+                        <button class="menu-btn" onclick="showSection('chat-list')">
+                            <span class="icon">💬</span> Chat <span id="message-count" class="badge" style="display: none; background: var(--danger);">0</span>
                         </button>
+                        <a href="/admin" class="menu-btn" id="admin-panel-btn" style="display: none; color: var(--accent);">
+                            <span class="icon">⚡</span> Admin Panel
+                        </a>
                     </div>
                 </aside>
 
@@ -121,6 +131,15 @@
                         </div>
                     </section>
 
+                    <section id="chat-list-section" class="content-section">
+                        <div class="section-header">
+                            <h2>Messages</h2>
+                            <button onclick="refreshChatList()" class="refresh-btn">Refresh</button>
+                        </div>
+                        <div id="chat-list" class="user-grid">
+                            <p class="no-data">Loading chats...</p>
+                        </div>
+                    </section>
                     
                     <section id="requests-section" class="content-section">
                         <div class="section-header">
@@ -134,7 +153,6 @@
                             <p class="no-data">No pending requests</p>
                         </div>
                     </section>
-
                     
                     <section id="suggestions-section" class="content-section">
                         <div class="section-header">
@@ -145,7 +163,6 @@
                             <p class="no-data">No suggestions available</p>
                         </div>
                     </section>
-
                     
                     <section id="users-section" class="content-section">
                         <div class="section-header">
@@ -165,6 +182,41 @@
         </div>
     </div>
 
+    <!-- Chat Modal -->
+    <div id="chat-modal" class="modal" style="display: none;">
+        <div class="modal-content glass chat-container">
+            <div class="chat-header">
+                <div class="chat-user-info">
+                    <div id="chat-avatar" class="user-avatar small"></div>
+                    <h3 id="chat-username">User</h3>
+                </div>
+                <span class="close" onclick="closeChat()">&times;</span>
+            </div>
+            <div id="chat-messages" class="chat-messages">
+                <!-- Messages will appear here -->
+            </div>
+            <div class="chat-input-area">
+                <div class="media-menu-container">
+                    <button onclick="toggleMediaMenu()" class="attach-btn icon-btn" id="media-menu-btn">＋</button>
+                    <div id="media-menu" class="media-menu">
+                        <button onclick="triggerFileUpload('image')" class="media-option">
+                            <span class="icon">📷</span> Photo
+                        </button>
+                        <button onclick="triggerFileUpload('video')" class="media-option">
+                            <span class="icon">🎥</span> Video
+                        </button>
+                        <button onclick="triggerFileUpload('file')" class="media-option">
+                            <span class="icon">📄</span> File
+                        </button>
+                    </div>
+                </div>
+                <input type="file" id="chat-file-input" style="display: none;" onchange="handleFileUpload(this)">
+                <input type="text" id="chat-input" placeholder="Type a message..." onkeydown="if(event.key === 'Enter') sendMessage()">
+                <button onclick="sendMessage()" class="send-btn icon-btn">➤</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add User Form Modal -->
     <div id="add-user-form" class="modal" style="display: none;">
         <div class="modal-content">
@@ -177,6 +229,39 @@
                 <input type="password" name="password" placeholder="Password" required>
                 <label><input type="checkbox" name="isAdmin"> Admin User</label>
                 <button type="submit">Create User</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="change-password-modal" class="modal" style="display: none;">
+        <div class="modal-content glass password-modal">
+            <div class="modal-header">
+                <div class="icon-circle">
+                    <span>🔐</span>
+                </div>
+                <h2>Update Password</h2>
+                <p>Ensure your account stays secure</p>
+                <span class="close-btn" onclick="hideChangePasswordModal()">&times;</span>
+            </div>
+            
+            <form id="change-password-form" onsubmit="event.preventDefault(); changePassword();">
+                <div class="input-group">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" id="cp-current" name="current-password" placeholder="Current Password" autocomplete="current-password" required>
+                </div>
+                
+                <div class="input-group">
+                    <span class="input-icon">✨</span>
+                    <input type="password" id="cp-new" name="new-password" placeholder="New Password (min 6 chars)" autocomplete="new-password" required>
+                </div>
+                
+                <div class="input-group">
+                    <span class="input-icon">✅</span>
+                    <input type="password" id="cp-confirm" name="confirm-password" placeholder="Confirm New Password" autocomplete="new-password" required>
+                </div>
+                
+                <button type="submit" class="primary-btn">Update Password</button>
             </form>
         </div>
     </div>

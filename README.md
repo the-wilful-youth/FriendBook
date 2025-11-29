@@ -20,9 +20,9 @@ _Real-time Connections | Smart Friend Suggestions | Cloud-Ready_
 - [Features](#-features)
 - [Tech Stack](#️-tech-stack)
 - [Quick Start](#-quick-start)
-- [Architecture](#️-architecture)
-- [API Documentation](#-api-documentation)
-- [Deployment](#-deployment)
+- [Architecture](DOCUMENTATION.md#technical-architecture)
+- [API Documentation](DOCUMENTATION.md#api-reference)
+- [Deployment](DOCUMENTATION.md#deployment-guide)
 - [Team](#-team)
 
 ---
@@ -130,6 +130,8 @@ To share your local instance with others:
 
 ## 🏗️ Architecture
 
+For detailed architecture documentation, see [DOCUMENTATION.md](DOCUMENTATION.md#technical-architecture).
+
 ### Project Structure
 
 ```
@@ -140,7 +142,8 @@ FriendBook/
 │   ├── index.html
 │   ├── app.js
 │   └── style.css
-├── scripts/           # Utility scripts
+├── DOCUMENTATION.md   # Complete documentation
+├── share.sh           # Remote access script
 ├── railway.json       # Railway deployment config
 ├── render.yaml        # Render deployment config
 └── README.md          # This file
@@ -150,38 +153,7 @@ FriendBook/
 
 ## 🌐 API Documentation
 
-### Authentication Endpoints
-
-#### POST `/api/register`
-Register a new user
-```json
-{ "username": "johndoe", "firstName": "John", "lastName": "Doe", "password": "password123" }
-```
-
-#### POST `/api/login`
-Login user
-```json
-{ "username": "johndoe", "password": "password123" }
-```
-
-### User Endpoints
-
-- **GET** `/api/users` - Get all users (requires authentication)
-- **GET** `/api/friends/:userId` - Get user's friends
-- **GET** `/api/smart-suggestions/:userId` - Get friend suggestions
-
-### Friend Request Endpoints
-
-- **POST** `/api/friend-request` - Send friend request
-- **GET** `/api/friend-requests/:userId` - Get pending friend requests
-- **POST** `/api/accept-request/:requestId` - Accept friend request
-- **DELETE** `/api/remove-friend` - Remove friend
-
-### Admin Endpoints
-
-- **POST** `/api/admin/users` - Create user (admin only)
-- **DELETE** `/api/admin/users/:id` - Delete user (admin only)
-- **DELETE** `/api/admin/clear` - Clear all data (admin only)
+See [DOCUMENTATION.md](DOCUMENTATION.md#api-reference) for complete API reference.
 
 ---
 
@@ -193,17 +165,7 @@ The application is production-ready and can be deployed to:
 - **Railway**
 - **Vercel** (Serverless)
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
-
-### Environment Variables
-
-```env
-TURSO_DATABASE_URL=your_turso_database_url
-TURSO_AUTH_TOKEN=your_turso_auth_token
-JWT_SECRET=your_jwt_secret
-NODE_ENV=production
-PORT=3000
-```
+See [DOCUMENTATION.md](DOCUMENTATION.md#deployment-guide) for detailed instructions.
 
 ---
 

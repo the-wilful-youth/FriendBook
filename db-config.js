@@ -61,8 +61,8 @@ class DatabaseWrapper {
       try {
         return await operation();
       } catch (error) {
-        // Don't log UNIQUE constraint errors (expected when data exists)
-        if (!error.message.includes("UNIQUE constraint")) {
+        // Don't log UNIQUE constraint or duplicate column errors (expected when data exists)
+        if (!error.message.includes("UNIQUE constraint") && !error.message.includes("duplicate column name")) {
           console.log(
             `Database operation failed (attempt ${i + 1}/${this.maxRetries}):`,
             error.message
@@ -70,7 +70,7 @@ class DatabaseWrapper {
         }
 
         if (i === this.maxRetries - 1) {
-          if (error.message.includes("UNIQUE constraint")) {
+          if (error.message.includes("UNIQUE constraint") || error.message.includes("duplicate column name")) {
             return null;
           }
 
@@ -83,8 +83,8 @@ class DatabaseWrapper {
           throw error;
         }
 
-        // Don't retry on UNIQUE constraint errors
-        if (error.message.includes("UNIQUE constraint")) {
+        // Don't retry on UNIQUE constraint or duplicate column errors
+        if (error.message.includes("UNIQUE constraint") || error.message.includes("duplicate column name")) {
           return null;
         }
 

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FriendBook - Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Admin Specific Styles */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+            background: #f0f2f5;
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .admin-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .admin-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .admin-nav-item {
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .admin-nav-item:hover, .admin-nav-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        .admin-main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-header h1 {
+            font-size: 1.8rem;
+            color: var(--text-main);
+        }
+
+        /* Stats Cards */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card-admin {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-info h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1;
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Data Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-light);
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #eee;
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .table-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .role-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .role-admin {
+            background: rgba(255, 0, 128, 0.1);
+            color: var(--accent);
+        }
+
+        .role-user {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-delete {
+            background: rgba(255, 118, 117, 0.1);
+            color: var(--danger);
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <div class="admin-brand">
+                <span>⚡</span> FriendBook Admin
+            </div>
+            <nav class="admin-nav">
+                <a class="admin-nav-item active">
+                    <span>👥</span> Users Management
+                </a>
+                <a href="/" class="admin-nav-item">
+                    <span>🏠</span> Back to App
+                </a>
+                <div style="flex:1"></div>
+                <a onclick="adminLogout()" class="admin-nav-item" style="color: var(--danger)">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            <div class="admin-header">
+                <h1>User Management</h1>
+                <div class="admin-controls">
+                    <button onclick="showAddUserForm()" class="add-btn">
+                        <span>＋</span> Add New User
+                    </button>
+                    <button onclick="refreshAdminData()" class="refresh-btn">
+                        <span>↻</span> Refresh
+                    </button>
+                    <button onclick="confirmClearDatabase()" class="action-btn btn-delete" style="background: var(--danger); color: white;">
+                        <span>🗑️</span> Clear DB
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-stats">
+                <div class="stat-card-admin">
+                    <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1); color: var(--primary)">👥</div>
+                    <div class="stat-info">
+                        <h3 id="total-users">0</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+                <div class="stat-card-admin">
+                    <div class="stat-icon" style="background: rgba(255, 0, 128, 0.1); color: var(--accent)">🛡️</div>
+                    <div class="stat-info">
+                        <h3 id="total-admins">0</h3>
+                        <p>Administrators</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- Rows will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add User Modal (Reused) -->
+    <div id="add-user-form" class="modal" style="display: none;">
+        <div class="modal-content glass password-modal">
+            <div class="modal-header">
+                <h2>Add New User</h2>
+                <span class="close-btn" onclick="hideAddUserForm()">&times;</span>
+            </div>
+            <form id="new-user-form" onsubmit="event.preventDefault(); adminAddUser();">
+                <div class="input-group">
+                    <span class="input-icon">👤</span>
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <span class="input-icon">📝</span>
+                    <input type="text" name="firstName" placeholder="First Name" required>
+                </div>
+                <div class="input-group">
+                    <span class="input-icon">📝</span>
+                    <input type="text" name="lastName" placeholder="Last Name" required>
+                </div>
+                <div class="input-group">
+                    <span class="input-icon">🔑</span>
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+                <div style="margin: 1rem 0; text-align: left;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" name="isAdmin" style="width: auto;"> 
+                        Grant Admin Privileges
+                    </label>
+                </div>
+                <button type="submit" class="primary-btn">Create User</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="app.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
