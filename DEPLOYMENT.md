@@ -21,8 +21,8 @@
    - Configure:
      - **Name**: friendbook
      - **Runtime**: Node
-     - **Build Command**: `cd web && npm install`
-     - **Start Command**: `cd web && npm start`
+     - **Build Command**: `npm install`
+     - **Start Command**: `npm start`
      - **Instance Type**: Free
 
 4. **Add Environment Variables:**
@@ -80,7 +80,6 @@
 2. **Deploy:**
 
    ```bash
-   cd web
    vercel
    ```
 
@@ -129,7 +128,6 @@ turso db tokens create friendbook
 Test production build locally:
 
 ```bash
-cd web
 npm install
 NODE_ENV=production npm start
 ```
@@ -154,7 +152,7 @@ Access at: http://localhost:3000
 
 **Issue: Build fails**
 
-- Ensure `cd web && npm install` runs successfully locally
+- Ensure `npm install` runs successfully locally
 - Check Node version (should be 16+)
 
 **Issue: App crashes on startup**

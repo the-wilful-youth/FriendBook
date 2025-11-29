@@ -3,11 +3,10 @@
 ## 📋 Table of Contents
 
 1. [System Architecture](#system-architecture)
-2. [Data Structures](#data-structures)
+2. [Database Design](#database-design)
 3. [Algorithm Analysis](#algorithm-analysis)
-4. [Database Design](#database-design)
-5. [Security Implementation](#security-implementation)
-6. [Performance Optimization](#performance-optimization)
+4. [Security Implementation](#security-implementation)
+5. [Performance Optimization](#performance-optimization)
 
 ---
 
@@ -22,10 +21,8 @@
                             │
             ┌───────────────┴───────────────┐
             │                               │
-    ┌───────▼──────┐                ┌──────▼───────┐
-    │ CLI Client   │                │ Web Client   │
-    │   (C Lang)   │                │ (JavaScript) │
-    └───────┬──────┘                └──────┬───────┘
+            │          Web Client           │
+            │         (Browser JS)          │
             │                               │
             └───────────────┬───────────────┘
                             │
@@ -38,15 +35,6 @@
                     │ Business Logic │
                     │   & Auth       │
                     └───────┬────────┘
-                            │
-            ┌───────────────┼───────────────┐
-            │               │               │
-    ┌───────▼──────┐ ┌─────▼─────┐ ┌──────▼───────┐
-    │    Graph     │ │Hash Table │ │    Queue     │
-    │  (Friends)   │ │  (Users)  │ │    (BFS)     │
-    └───────┬──────┘ └─────┬─────┘ └──────┬───────┘
-            │               │               │
-            └───────────────┼───────────────┘
                             │
                 ┌───────────▼────────────┐
                 │   Database Layer       │
@@ -64,7 +52,7 @@
 ```
 User Input → Validation → Authentication → Business Logic
                                               ↓
-                                    Data Structure Layer
+                                         SQL Queries
                                               ↓
                                          Database
                                               ↓
@@ -75,241 +63,9 @@ User Input → Validation → Authentication → Business Logic
 
 ---
 
-## 2. Data Structures
+## 2. Database Design
 
-### 2.1 Graph (Adjacency List)
-
-**Purpose**: Represent the social network of friendships
-
-**Structure**:
-```c
-typedef struct AdjListNode {
-    int userId;
-    struct AdjListNode* next;
-} AdjListNode;
-
-typedef struct Graph {
-    int numVertices;
-    AdjListNode** adjLists;
-} Graph;
-```
-
-**Operations**:
-| Operation | Implementation | Time Complexity | Space Complexity |
-|-----------|----------------|-----------------|------------------|
-| Create Graph | Allocate vertex array | O(V) | O(V) |
-| Add Edge | Insert at head of list | O(1) | O(1) |
-| Remove Edge | Traverse and delete | O(V) | O(1) |
-| Find Friends | Traverse adjacency list | O(E) | O(1) |
-| Display Graph | Visit all vertices | O(V + E) | O(1) |
-
-**Memory Layout**:
-```
-Graph
-  ├── numVertices: 100
-  └── adjLists[100]
-        ├── [0] → User5 → User12 → NULL
-        ├── [1] → User7 → User9 → User15 → NULL
-        ├── [2] → NULL
-        └── ...
-```
-
-**Advantages**:
-- Efficient for sparse graphs (typical in social networks)
-- Easy to add/remove edges
-- Memory efficient when |E| << |V²|
-
-**Use Cases**:
-- Friend relationship storage
-- Graph traversal for suggestions
-- Friendship path finding
-
----
-
-### 2.2 Hash Table
-
-**Purpose**: Fast user lookup by username
-
-**Structure**:
-```c
-#define TABLE_SIZE 100
-
-typedef struct HashNode {
-    char* username;
-    int userId;
-    struct HashNode* next;
-} HashNode;
-
-typedef struct HashTable {
-    HashNode* buckets[TABLE_SIZE];
-} HashTable;
-```
-
-**Hash Function**:
-```c
-unsigned int hash(const char* str) {
-    unsigned int hash = 5381;
-    int c;
-    while ((c = *str++))
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
-    return hash % TABLE_SIZE;
-}
-```
-
-**Operations**:
-| Operation | Average Case | Worst Case |
-|-----------|--------------|------------|
-| Insert | O(1) | O(n) |
-| Search | O(1) | O(n) |
-| Delete | O(1) | O(n) |
-
-**Collision Resolution**: Chaining with linked lists
-
-**Load Factor**: α = n/m where n = elements, m = buckets
-- Target: α < 0.75 for good performance
-
----
-
-### 2.3 Queue (for BFS)
-
-**Purpose**: Breadth-First Search for friend suggestions
-
-**Structure**:
-```c
-typedef struct QueueNode {
-    int userId;
-    struct QueueNode* next;
-} QueueNode;
-
-typedef struct Queue {
-    QueueNode* front;
-    QueueNode* rear;
-} Queue;
-```
-
-**Operations**:
-| Operation | Time Complexity | Space Complexity |
-|-----------|----------------|------------------|
-| Enqueue | O(1) | O(1) |
-| Dequeue | O(1) | O(1) |
-| IsEmpty | O(1) | O(1) |
-
-**BFS Algorithm for Friend Suggestions**:
-```
-1. Initialize queue with current user's friends
-2. Mark all direct friends as visited
-3. While queue not empty:
-   a. Dequeue a user
-   b. For each friend of dequeued user:
-      - If not visited and not already friends:
-        * Add to suggestions
-        * Mark as visited
-   c. Track mutual friend count
-4. Sort suggestions by mutual friends
-5. Return top N suggestions
-```
-
----
-
-## 3. Algorithm Analysis
-
-### 3.1 Friend Suggestion Algorithm
-
-**Approach**: Modified BFS with mutual friend counting
-
-**Pseudocode**:
-```
-function getSuggestions(userId):
-    visited = new Set()
-    suggestions = new Map()  // userId -> mutual_count
-    
-    // Get user's friends
-    friends = getFriends(userId)
-    
-    // Mark direct friends as visited
-    for friend in friends:
-        visited.add(friend)
-    
-    // Check friends of friends
-    for friend in friends:
-        friendsOfFriend = getFriends(friend)
-        
-        for potential in friendsOfFriend:
-            if potential not in visited and potential != userId:
-                if potential in suggestions:
-                    suggestions[potential]++
-                else:
-                    suggestions[potential] = 1
-                visited.add(potential)
-    
-    // Sort by mutual friend count
-    sorted = sortByValue(suggestions, descending)
-    
-    return top(sorted, 10)
-```
-
-**Complexity Analysis**:
-- Time: O(V + E) where V = users, E = friendships
-- Space: O(V) for visited set and suggestions map
-- Optimal for sparse graphs (typical social networks)
-
-**Optimizations**:
-- Early termination after finding N suggestions
-- Caching suggestions for frequently queried users
-- Parallel processing for large networks
-
----
-
-### 3.2 Graph Traversal
-
-**DFS (Depth-First Search)**:
-```c
-void DFS(Graph* graph, int vertex, bool visited[]) {
-    visited[vertex] = true;
-    printf("%d ", vertex);
-    
-    AdjListNode* current = graph->adjLists[vertex];
-    while (current != NULL) {
-        int connectedVertex = current->userId;
-        if (!visited[connectedVertex]) {
-            DFS(graph, connectedVertex, visited);
-        }
-        current = current->next;
-    }
-}
-```
-
-**BFS (Breadth-First Search)**:
-```c
-void BFS(Graph* graph, int startVertex) {
-    bool visited[MAX_USERS] = {false};
-    Queue* queue = createQueue();
-    
-    visited[startVertex] = true;
-    enqueue(queue, startVertex);
-    
-    while (!isEmpty(queue)) {
-        int currentVertex = dequeue(queue);
-        printf("%d ", currentVertex);
-        
-        AdjListNode* temp = graph->adjLists[currentVertex];
-        while (temp) {
-            int adjVertex = temp->userId;
-            if (!visited[adjVertex]) {
-                visited[adjVertex] = true;
-                enqueue(queue, adjVertex);
-            }
-            temp = temp->next;
-        }
-    }
-}
-```
-
----
-
-## 4. Database Design
-
-### 4.1 Schema
+### 2.1 Schema
 
 **Users Table**:
 ```sql
@@ -361,7 +117,7 @@ CREATE INDEX idx_receiver ON friend_requests(receiver_id);
 CREATE INDEX idx_status ON friend_requests(status);
 ```
 
-### 4.2 Query Optimization
+### 2.2 Query Optimization
 
 **Frequently Used Queries**:
 
@@ -385,9 +141,51 @@ WHERE fr.receiver_id = ? AND fr.status = 'pending';
 
 ---
 
-## 5. Security Implementation
+## 3. Algorithm Analysis
 
-### 5.1 Authentication Flow
+### 3.1 Smart Friend Suggestion Algorithm
+
+**Approach**: Weighted scoring system based on mutual friends, network distance, and user activity.
+
+**Scoring Factors**:
+1. **Mutual Friends (50% weight)**:
+   - Primary indicator of connection relevance.
+   - Score += mutual_count * 5.0
+
+2. **Network Distance (20% weight)**:
+   - Bonus for "Friends of Friends" (Distance = 2).
+   - Score += 3.0 if distance == 2
+
+3. **Balanced Popularity (15% weight)**:
+   - Penalizes users with vastly different friend counts to ensure balanced connections.
+   - Uses ratio of friend counts.
+
+4. **Active User Bonus (15% weight)**:
+   - Encourages connecting with active users (2-20 friends).
+   - Score += 2.0
+
+**Implementation**:
+The algorithm is implemented in JavaScript (Node.js) and executes the following steps:
+1. Fetch user's direct friends.
+2. Fetch pending/sent requests to exclude them.
+3. Fetch all other users (candidates).
+4. For each candidate:
+   - Calculate mutual friends using SQL.
+   - Calculate network distance.
+   - Compute weighted score.
+5. Sort candidates by score descending.
+6. Return top 12 suggestions.
+
+**Complexity Analysis**:
+- Time: O(N * M) where N = total users, M = average friend count (due to mutual friend check).
+- Space: O(N) to store candidate list.
+- Optimization: Database indexing significantly speeds up the mutual friend queries.
+
+---
+
+## 4. Security Implementation
+
+### 4.1 Authentication Flow
 
 ```
 Registration:
@@ -400,7 +198,7 @@ Protected Request:
   Request + Token → Verify JWT → Extract User → Process Request
 ```
 
-### 5.2 Security Layers
+### 4.2 Security Layers
 
 **1. Input Validation**:
 ```javascript
@@ -435,11 +233,15 @@ const token = jwt.sign(
 await db.run('SELECT * FROM users WHERE id = ?', [userId]);
 ```
 
+**5. Security Headers**:
+- **Helmet.js**: Sets secure HTTP headers (CSP, X-XSS-Protection, etc).
+- **Rate Limiting**: Prevents brute force attacks (1000 req / 15 min).
+
 ---
 
-## 6. Performance Optimization
+## 5. Performance Optimization
 
-### 6.1 Database Optimizations
+### 5.1 Database Optimizations
 
 **SQLite Pragmas**:
 ```javascript
@@ -455,82 +257,19 @@ db.run("PRAGMA mmap_size = 268435456");    // 256MB memory map
 - Cache: Reduced disk I/O
 - Memory mapping: Faster data access
 
-### 6.2 Compiler Optimizations
+### 5.2 Application Optimizations
 
-**Makefile Flags**:
-```makefile
-CFLAGS = -O3 -march=native -flto -DNDEBUG
-```
+**1. Connection Pooling**:
+- The database wrapper handles connection retries and state management.
 
-**Explanations**:
-- `-O3`: Maximum optimization level
-- `-march=native`: CPU-specific optimizations
-- `-flto`: Link-Time Optimization
-- `-DNDEBUG`: Remove debug assertions
+**2. Efficient Data Loading**:
+- Only necessary fields are selected in SQL queries (e.g., `SELECT id, username` instead of `SELECT *`).
 
-**Performance Gain**: ~30-40% faster execution
-
-### 6.3 Algorithm Optimizations
-
-**1. Early Termination**:
-```c
-// Stop after finding N suggestions
-if (suggestionsCount >= MAX_SUGGESTIONS) break;
-```
-
-**2. Lazy Loading**:
-```javascript
-// Load friends only when needed
-const friends = await getFriends(userId);
-```
-
-**3. Caching** (Future):
-```javascript
-const cache = new Map();
-if (cache.has(userId)) return cache.get(userId);
-// ... compute result
-cache.set(userId, result);
-```
+**3. Static Asset Caching**:
+- Express `express.static` handles caching for frontend assets.
 
 ---
 
-## 7. Testing Strategy
-
-### Unit Tests
-- Hash function distribution
-- Graph operations
-- Queue operations
-- Authentication logic
-
-### Integration Tests
-- API endpoint testing
-- Database operations
-- End-to-end user flows
-
-### Performance Tests
-- Load testing with 1000+ users
-- Concurrent request handling
-- Database query performance
-
----
-
-## 8. Future Enhancements
-
-### Scalability
-- Database sharding for large user base
-- Caching layer (Redis)
-- Message queue for async operations
-- Load balancing
-
-### Features
-- WebSocket for real-time updates
-- Advanced graph algorithms (Dijkstra for friend paths)
-- Machine learning for better suggestions
-- Graph visualization
-
----
-
-**Document Version**: 1.0  
-**Last Updated**: 2024-11-11  
-**Team**: ADAPT (DS-III-T005)  
-**Primary Developer**: Anurag Bhowmick (240211698)
+**Document Version**: 2.0 (Web Adaptation)
+**Last Updated**: 2025-11-29
+**Team**: ADAPT (DS-III-T005)

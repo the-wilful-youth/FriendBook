@@ -9,7 +9,6 @@ pkill -f "ngrok" 2>/dev/null
 
 # Start the server with environment variables
 echo "🚀 Starting FriendBook server with online database..."
-cd web
 
 # Check if dependencies are installed
 if [ ! -d "node_modules" ]; then
@@ -28,7 +27,6 @@ fi
 # Start server in background
 node server.js &
 SERVER_PID=$!
-cd ..
 
 # Wait for server to start
 echo "⏳ Waiting for server to start..."

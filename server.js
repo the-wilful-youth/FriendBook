@@ -61,6 +61,7 @@ const validate = (req, res, next) => {
     next();
 };
 
+
 async function initDatabase() {
     try {
         await db.run(`CREATE TABLE IF NOT EXISTS users (
@@ -85,12 +86,13 @@ async function initDatabase() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_id INTEGER NOT NULL,
             receiver_id INTEGER NOT NULL,
-            status TEXT DEFAULT 'pending',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            status TEXT DEFAULT 'pending',\n            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(sender_id, receiver_id)
         )`);
         
         console.log('✅ Database tables initialized');
+
+
     } catch (error) {
         console.error('Database initialization error:', error);
     }
@@ -143,9 +145,10 @@ app.post('/api/register', [
         }
         
         const hashedPassword = await bcrypt.hash(password, 10);
-        await db.run('INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)',
+        const result = await db.run('INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)',
             [username, firstName, lastName, hashedPassword, 0]);
         
+
         res.json({ 
             success: true, 
             message: 'Registration successful'
@@ -247,6 +250,7 @@ app.post('/api/accept-request/:requestId', [
         await db.run('INSERT OR IGNORE INTO friendships (user1_id, user2_id) VALUES (?, ?)', [request.sender_id, request.receiver_id]);
         await db.run('DELETE FROM friend_requests WHERE id = ?', [requestId]);
         
+
         res.json({ message: 'Friend request accepted' });
     } catch (error) {
         console.error('Database error:', error);
@@ -265,6 +269,7 @@ app.delete('/api/remove-friend', [
         await db.run('DELETE FROM friendships WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)', 
             [userId, friendId, friendId, userId]);
         
+
         res.json({ message: 'Friend removed successfully' });
     } catch (error) {
         console.error('Database error:', error);
@@ -397,6 +402,8 @@ app.delete('/api/admin/users/:id', [
         await db.run('DELETE FROM friendships WHERE user1_id = ? OR user2_id = ?', [userId, userId]);
         await db.run('DELETE FROM friend_requests WHERE sender_id = ? OR receiver_id = ?', [userId, userId]);
         await db.run('DELETE FROM users WHERE id = ?', [userId]);
+        
+
         res.json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete user' });
@@ -414,8 +421,10 @@ app.post('/api/admin/users', [
     
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await db.run('INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)',
+        const result = await db.run('INSERT INTO users (username, firstName, lastName, password, isAdmin) VALUES (?, ?, ?, ?, ?)',
             [username, firstName, lastName, hashedPassword, isAdmin ? 1 : 0]);
+            
+
         res.json({ success: true, message: 'User created successfully' });
     } catch (error) {
         res.status(400).json({ error: 'Username already exists' });
@@ -427,6 +436,8 @@ app.delete('/api/admin/clear', auth, adminAuth, async (req, res) => {
         await db.run('DELETE FROM friendships');
         await db.run('DELETE FROM friend_requests');
         await db.run('DELETE FROM users WHERE username != "admin"');
+        
+
         res.json({ success: true, message: 'Database cleared successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to clear database' });

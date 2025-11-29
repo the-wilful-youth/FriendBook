@@ -2,13 +2,13 @@
 
 <div align="center">
 
-**A Dual-Interface Social Networking Application**
+**A Modern Social Networking Web Application**
 
-_CLI & Web Interface | Shared Online Database | Advanced Friend Suggestions_
+_Real-time Connections | Smart Friend Suggestions | Cloud-Ready_
 
-[![Made with C](https://img.shields.io/badge/C-00599C?style=flat&logo=c&logoColor=white)](<https://en.wikipedia.org/wiki/C_(programming_language)>)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![SQLite](https://img.shields.io/badge/SQLite-07405E?style=flat&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Express](https://img.shields.io/badge/Express.js-000000?style=flat&logo=express&logoColor=white)](https://expressjs.com/)
 
 </div>
 
@@ -21,7 +21,6 @@ _CLI & Web Interface | Shared Online Database | Advanced Friend Suggestions_
 - [Tech Stack](#️-tech-stack)
 - [Quick Start](#-quick-start)
 - [Architecture](#️-architecture)
-- [Data Structures Used](#-data-structures-used)
 - [API Documentation](#-api-documentation)
 - [Deployment](#-deployment)
 - [Team](#-team)
@@ -30,16 +29,16 @@ _CLI & Web Interface | Shared Online Database | Advanced Friend Suggestions_
 
 ## 🎯 Overview
 
-FriendBook is a comprehensive social networking platform that demonstrates the practical implementation of advanced data structures in C. The application offers both a **Command-Line Interface (CLI)** and a modern **Web Interface**, both sharing a unified online database powered by Turso (LibSQL).
+FriendBook is a comprehensive social networking platform built with Node.js and Express. It features a modern, responsive web interface and a powerful backend that handles user relationships, friend requests, and smart suggestions using advanced graph algorithms.
 
 ### Key Highlights
 
-- **Dual Interface**: Seamlessly switch between CLI and web interfaces
-- **Graph-Based Friend Network**: Efficient friendship management using adjacency lists
-- **Smart Friend Suggestions**: BFS-based mutual friends algorithm
-- **Real-time Operations**: Instant friend requests and notifications
+- **Modern Web Interface**: Clean, responsive, and intuitive UI
+- **Smart Friend Suggestions**: Advanced algorithm based on mutual friends and network analysis
+- **Real-time Operations**: Instant friend requests and updates
 - **Admin Dashboard**: Comprehensive user management system
-- **Production Ready**: Deployed on cloud with Turso database
+- **Production Ready**: Deployed on cloud with Turso (LibSQL) support
+- **Secure**: JWT authentication and bcrypt password hashing
 
 ---
 
@@ -52,8 +51,7 @@ FriendBook is a comprehensive social networking platform that demonstrates the p
 - ✅ Friend Management (Add, Remove, View)
 - ✅ Smart Friend Suggestions (Mutual friends algorithm)
 - ✅ Admin Dashboard (User management, Analytics)
-- ✅ Real-time Web Interface
-- ✅ Persistent Cloud Database (Turso/LibSQL)
+- ✅ Persistent Cloud Database (Turso/LibSQL) or Local SQLite
 
 ### Advanced Features
 
@@ -61,32 +59,22 @@ FriendBook is a comprehensive social networking platform that demonstrates the p
 - 📊 Friend analytics and statistics
 - 🔍 User search functionality
 - 📱 Responsive web design
-- ⚡ Optimized graph traversal algorithms
 - 🌐 Online/Offline database fallback
 
 ---
 
 ## 🛠️ Tech Stack
 
-### CLI Application (C)
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: Turso (LibSQL) / SQLite3
+- **Authentication**: JWT (jsonwebtoken)
+- **Security**: Helmet, bcrypt, rate-limiting
 
-```
-├── Language: C (GCC compiler)
-├── Database: SQLite3
-├── Data Structures: Graphs, Hash Tables, Queues
-└── Build System: Make
-```
-
-### Web Application (Node.js)
-
-```
-├── Backend: Express.js
-├── Database: Turso (LibSQL) / SQLite3
-├── Authentication: JWT (jsonwebtoken)
-├── Security: Helmet, bcrypt, rate-limiting
-├── Frontend: Vanilla JavaScript, HTML5, CSS3
-└── Real-time: Socket.io ready
-```
+### Frontend
+- **Core**: Vanilla JavaScript, HTML5, CSS3
+- **Design**: Custom responsive CSS
 
 ---
 
@@ -95,12 +83,6 @@ FriendBook is a comprehensive social networking platform that demonstrates the p
 ### Prerequisites
 
 ```bash
-# CLI Requirements
-gcc --version        # GCC compiler
-make --version       # GNU Make
-sqlite3 --version    # SQLite3
-
-# Web Requirements
 node --version       # Node.js v16+
 npm --version        # npm package manager
 ```
@@ -114,25 +96,30 @@ npm --version        # npm package manager
    cd FriendBook
    ```
 
-2. **Build & Run CLI**
+2. **Install Dependencies**
 
    ```bash
-   make cli
-   ./build/friendbook
+   npm install
    ```
 
-3. **Setup & Run Web Server**
+3. **Run the Application**
 
    ```bash
-   make web
-   ./share.sh
-   # Or manually: cd web && npm start
+   npm start
    ```
 
 4. **Access Web Interface**
    ```
    http://localhost:3000
    ```
+
+### Remote Access (Optional)
+
+To share your local instance with others:
+
+```bash
+./share.sh
+```
 
 ---
 
@@ -142,163 +129,16 @@ npm --version        # npm package manager
 
 ```
 FriendBook/
-├── src/                    # CLI Source Code
-│   ├── main.c             # Entry point & menu system
-│   ├── user.c             # User management
-│   ├── auth.c             # Authentication logic
-│   ├── graph.c            # Graph operations
-│   ├── friend_request.c   # Friend request handling
-│   ├── suggestions.c      # Friend suggestion algorithm
-│   ├── hashtable.c        # Hash table implementation
-│   └── fileio.c           # File I/O operations
-│
-├── include/               # Header Files
-│   ├── user.h
-│   ├── graph.h
-│   ├── auth.h
-│   └── ...
-│
-├── web/                   # Web Application
-│   ├── server.js          # Express server
-│   ├── db-config.js       # Database configuration
-│   ├── public/            # Frontend files
-│   │   ├── index.html
-│   │   ├── app.js
-│   │   └── style.css
-│   └── scripts/           # Utility scripts
-│
-├── build/                 # Compiled binaries
-├── Makefile              # Build configuration
-├── .env.example          # Environment template
-├── DEPLOYMENT.md         # Deployment guide
-└── README.md             # This file
-```
-
-### System Architecture Diagram
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                     FriendBook System                    │
-├─────────────────────────────────────────────────────────┤
-│                                                           │
-│  ┌──────────────┐              ┌──────────────┐         │
-│  │  CLI Client  │              │  Web Client  │         │
-│  │  (C/SQLite)  │              │ (Browser JS) │         │
-│  └──────┬───────┘              └──────┬───────┘         │
-│         │                              │                 │
-│         │         ┌────────────────────┘                 │
-│         │         │                                      │
-│         ▼         ▼                                      │
-│  ┌────────────────────────┐                             │
-│  │   Database Layer       │                             │
-│  │  ┌──────────────────┐  │                             │
-│  │  │ Turso (Online)   │◄─┼─── Primary                 │
-│  │  └──────────────────┘  │                             │
-│  │  ┌──────────────────┐  │                             │
-│  │  │ SQLite (Local)   │◄─┼─── Fallback                │
-│  │  └──────────────────┘  │                             │
-│  └────────────────────────┘                             │
-│                                                           │
-│  ┌────────────────────────────────────────────┐         │
-│  │         Data Structure Layer                │         │
-│  │  ┌────────────┐  ┌────────────┐            │         │
-│  │  │   Graph    │  │ Hash Table │            │         │
-│  │  │ (Friends)  │  │  (Users)   │            │         │
-│  │  └────────────┘  └────────────┘            │         │
-│  │  ┌────────────┐  ┌────────────┐            │         │
-│  │  │   Queue    │  │ Adjacency  │            │         │
-│  │  │ (BFS/DFS)  │  │    List    │            │         │
-│  │  └────────────┘  └────────────┘            │         │
-│  └────────────────────────────────────────────┘         │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## 📊 Data Structures Used
-
-### 1. **Graph (Adjacency List)**
-
-**File**: `src/graph.c`, `include/graph.h`
-
-**Purpose**: Represent friend relationships
-
-**Operations**:
-
-- `addEdge()`: Add friendship (O(1))
-- `removeEdge()`: Remove friendship (O(V))
-- `displayGraph()`: Display all connections (O(V + E))
-
-**Implementation**:
-
-```c
-typedef struct AdjListNode {
-    int userId;
-    struct AdjListNode* next;
-} AdjListNode;
-
-typedef struct Graph {
-    int numVertices;
-    AdjListNode** adjLists;
-} Graph;
-```
-
-### 2. **Hash Table**
-
-**File**: `src/hashtable.c`, `include/hashtable.h`
-
-**Purpose**: Fast user lookup by username
-
-**Operations**:
-
-- `insert()`: Add user (O(1) average)
-- `search()`: Find user (O(1) average)
-- `delete()`: Remove user (O(1) average)
-
-**Collision Handling**: Chaining with linked lists
-
-### 3. **Queue**
-
-**File**: `src/suggestions.c`
-
-**Purpose**: BFS traversal for friend suggestions
-
-**Operations**:
-
-- `enqueue()`: Add to queue (O(1))
-- `dequeue()`: Remove from queue (O(1))
-- Used in BFS for finding mutual friends
-
-### 4. **Linked Lists**
-
-**Purpose**: Various uses throughout the application
-
-- Adjacency list nodes in graph
-- Hash table collision chains
-- Friend request queues
-
----
-
-## 🔧 Build Commands
-
-```bash
-# Build CLI only
-make cli
-
-# Setup web application
-make web
-
-# Build both
-make all
-
-# Run CLI
-make run-cli
-
-# Run web server
-make run-web
-
-# Clean build files
-make clean
+├── server.js          # Express server entry point
+├── db-config.js       # Database configuration
+├── public/            # Frontend files
+│   ├── index.html
+│   ├── app.js
+│   └── style.css
+├── scripts/           # Utility scripts
+├── railway.json       # Railway deployment config
+├── render.yaml        # Render deployment config
+└── README.md          # This file
 ```
 
 ---
@@ -308,108 +148,35 @@ make clean
 ### Authentication Endpoints
 
 #### POST `/api/register`
-
 Register a new user
-
 ```json
-Request:
-{
-  "username": "johndoe",
-  "firstName": "John",
-  "lastName": "Doe",
-  "password": "password123"
-}
-
-Response:
-{
-  "success": true,
-  "message": "Registration successful"
-}
+{ "username": "johndoe", "firstName": "John", "lastName": "Doe", "password": "password123" }
 ```
 
 #### POST `/api/login`
-
 Login user
-
 ```json
-Request:
-{
-  "username": "johndoe",
-  "password": "password123"
-}
-
-Response:
-{
-  "token": "jwt_token_here",
-  "user": {
-    "id": 1,
-    "username": "johndoe",
-    "firstName": "John",
-    "lastName": "Doe",
-    "isAdmin": 0
-  }
-}
+{ "username": "johndoe", "password": "password123" }
 ```
 
 ### User Endpoints
 
-#### GET `/api/users`
-
-Get all users (requires authentication)
-
-#### GET `/api/friends/:userId`
-
-Get user's friends
-
-#### GET `/api/smart-suggestions/:userId`
-
-Get friend suggestions based on mutual friends
+- **GET** `/api/users` - Get all users (requires authentication)
+- **GET** `/api/friends/:userId` - Get user's friends
+- **GET** `/api/smart-suggestions/:userId` - Get friend suggestions
 
 ### Friend Request Endpoints
 
-#### POST `/api/friend-request`
-
-Send friend request
-
-```json
-{
-  "fromUserId": 1,
-  "toUserId": 2
-}
-```
-
-#### GET `/api/friend-requests/:userId`
-
-Get pending friend requests
-
-#### POST `/api/accept-request/:requestId`
-
-Accept friend request
-
-#### DELETE `/api/remove-friend`
-
-Remove friend
-
-```json
-{
-  "userId": 1,
-  "friendId": 2
-}
-```
+- **POST** `/api/friend-request` - Send friend request
+- **GET** `/api/friend-requests/:userId` - Get pending friend requests
+- **POST** `/api/accept-request/:requestId` - Accept friend request
+- **DELETE** `/api/remove-friend` - Remove friend
 
 ### Admin Endpoints
 
-#### POST `/api/admin/users`
-
-Create user (admin only)
-
-#### DELETE `/api/admin/users/:id`
-
-Delete user (admin only)
-
-#### DELETE `/api/admin/clear`
-
-Clear all data except admin (admin only)
+- **POST** `/api/admin/users` - Create user (admin only)
+- **DELETE** `/api/admin/users/:id` - Delete user (admin only)
+- **DELETE** `/api/admin/clear` - Clear all data (admin only)
 
 ---
 
@@ -435,70 +202,15 @@ PORT=3000
 
 ---
 
-## 🧪 Testing
-
-### Manual Testing
-
-```bash
-# Test CLI
-./build/friendbook
-
-# Test Web API
-curl http://localhost:3000/api/users
-```
-
-### Test Scenarios
-
-1. User registration and login
-2. Friend request flow
-3. Friend suggestions algorithm
-4. Admin operations
-5. Database failover (Turso → SQLite)
-
----
-
-## 📈 Algorithm Complexity
-
-| Operation                | Time Complexity | Space Complexity |
-| ------------------------ | --------------- | ---------------- |
-| Add Friend               | O(1)            | O(1)             |
-| Remove Friend            | O(V)            | O(1)             |
-| Find Friends             | O(V + E)        | O(V)             |
-| Friend Suggestions (BFS) | O(V + E)        | O(V)             |
-| User Lookup (Hash)       | O(1) avg        | O(n)             |
-| Authentication           | O(1)            | O(1)             |
-
-Where:
-
-- V = Number of vertices (users)
-- E = Number of edges (friendships)
-- n = Number of users in hash table
-
----
-
-## 🔒 Security Features
-
-- ✅ JWT-based authentication
-- ✅ Password hashing with bcrypt (10 rounds)
-- ✅ SQL injection prevention (parameterized queries)
-- ✅ Rate limiting (1000 requests per 15 minutes)
-- ✅ Input validation with express-validator
-- ✅ Helmet.js security headers
-- ✅ CORS protection
-- ✅ XSS prevention
-
----
-
 ## 📝 License
 
-This project is part of an academic Project for **TCS-302: Data Structures in C**.
+This project is part of an academic Project for **TCS-302: Data Structures in C** (Web Adaptation).
 
 ---
 
 ## 👥 Team
 
-**Team ADAPT (DS-III-T005)**  
-_TCS-302: Data Structures in C_
+**Team ADAPT (DS-III-T005)**
 
 | Name            | Roll Number | Email                        |
 | --------------- | ----------- | ---------------------------- |
@@ -506,25 +218,6 @@ _TCS-302: Data Structures in C_
 | Tanishk Gupta   | 240111241   | tanishkg232@gmail.com        |
 | Prajjwal Singh  | 240111017   | prajjwalsingh8705@gmail.com  |
 | Divyanshi Singh | 240221677   | dnshi235@gmail.com           |
-
-### 📋 Task Distribution & Contributions
-
-| #      | Task Completed                                                                                                                                                                                                                                                                                                                                                                | Team Member         |
-| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| **1**  | **System Design & Modular Architecture Setup** – Planned and structured the complete FriendBook system by defining core modules: User Management, Authentication, Friendship Graph, Request Queue, Suggestion Engine, Storage Layer, and User Interfaces (CLI and Web). Established communication logic and data flow standards across modules.                               | **Entire Team**     |
-| **2**  | **User Management Module (Linked-List Storage with Admin Tools)** – Implemented user creation, search, profile lookup, updating, and deletion using dynamic linked-list structures. Added an admin dashboard and data validation for safe user handling.                                                                                                                      | **Prajjwal Singh**  |
-| **3**  | **Authentication Module (Credential Handling & Secure Login Flow)** – Developed the system for registration and login including password validation, duplicate account handling, and secure storage of credentials. Added error states and logical blocking for unauthorized access.                                                                                          | **Tanishk Gupta**   |
-| **4**  | **Graph Module – Friendship Network (Adjacency List & Relationship Mapping)** – Designed the social graph using adjacency lists for efficient addition/removal of friendships and traversal of friends lists. Enabled analysis of mutual friends and user connectivity.                                                                                                       | **Anurag Bhowmick** |
-| **5**  | **Friend Request System – Queue-Based Pending Request Architecture** – Built a linked-queue module to manage sending, receiving, listing, and accepting friend requests. Ensured FIFO ordering, prevented duplicate requests, and preserved request states.                                                                                                                   | **Divyanshi Singh** |
-| **6**  | **Friend Suggestion Engine – Graph-Driven Recommendation Logic** – Implemented suggestion scoring using graph traversal (mutual friends and distance). Used BFS-based ranking to provide meaningful and highly relevant friend recommendations.                                                                                                                               | **Divyanshi Singh** |
-| **7**  | **Local Database Using `.txt` Files – First Version of Persistent Storage for Users & Friend Lists** – Implemented the initial persistence layer using `.txt` files, allowing runtime data (users, requests, and friend connections) to be saved and re-loaded when the CLI restarts. Enabled automatic file reading/writing to maintain data continuity between sessions.    | **Tanishk Gupta**   |
-| **8**  | **Database Upgrade to SQLite – Reliable & Structured Storage Layer with Table Schemas** – Replaced the file-based storage with a robust SQLite database. Designed database schemas and created a modular database access layer for storing and retrieving users, friendships, and pending requests. Provided a major stability and performance improvement across the system. | **Anurag Bhowmick** |
-| **9**  | **CLI Interface Development – Interactive Text-Based UI with Color Formatting** – Built a visually intuitive menu-driven interface for registration, login, friend management, request inbox, suggestions, and admin controls. Included ANSI color formatting and strong input validation for a user-friendly CLI experience.                                                 | **Prajjwal Singh**  |
-| **10** | **Web Interface Integration – Express.js API & Frontend for Online FriendBook Access** – Created the full web version of FriendBook using Node.js (Express) for backend APIs and HTML/JS/TailwindCSS for the frontend. Implemented JWT authentication, friend management, requests, suggestions, and real-time display of stored data using REST APIs.                        | **Anurag Bhowmick** |
-| **11** | **Testing & Debugging – Memory, Pointer, Storage & API Validation** – Performed continuous testing across both CLI and Web systems. Resolved memory leaks, pointer bugs, invalid request states, data inconsistency issues, and database conflicts.                                                                                                                           | **Entire Team**     |
-| **12** | **Version Control & Collaboration – GitHub Workflow & Project Tracking** – Used GitHub for managing commits, branching, pull requests, issue tracking, progress milestones, and collaborative feature development.                                                                                                                                                            | **Entire Team**     |
-
----
 
 <div align="center">
 

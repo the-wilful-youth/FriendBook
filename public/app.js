@@ -4,7 +4,7 @@ let currentUser = null;
 document.addEventListener('DOMContentLoaded', function() {
     // Restore user session on page load
     const savedUser = localStorage.getItem('currentUser');
-    const savedToken = localStorage.getItem('token');
+    const savedToken = localStorage.getItem('token'); 
     
     if (savedUser && savedToken) {
         try {

@@ -49,11 +49,11 @@ The friend suggestion algorithm has been significantly enhanced to provide more 
 
 #### **Improved Coverage**
 - **Extended reach**: Now searches up to 3 levels deep in the network
-- **More suggestions**: Increased from 5 to 8 (CLI) / 12 (Web)
+- **More suggestions**: Increased to 12 suggestions
 - **Better filtering**: Only shows meaningful connections
 
 #### **Smarter Display**
-- �� Shows multiple connection indicators:
+- 📊 Shows multiple connection indicators:
   - ● Mutual friends count
   - ● Network distance (Direct/Extended)
   - ● Friend count for context
@@ -67,29 +67,14 @@ The friend suggestion algorithm has been significantly enhanced to provide more 
 
 ## Technical Implementation
 
-### CLI (C Implementation)
-**File**: `src/suggestions.c`
-
-```c
-// Multi-factor score calculation
-float calculateScore(int mutualCount, int distance, 
-                     int candidateFriendCount, int userFriendCount)
-```
-
-**Key Changes:**
-- Added `score` and `distance` fields to `Suggestion` struct
-- Implemented `calculateScore()` function with weighted factors
-- Extended network search to 3 levels (friends of friends of friends)
-- Enhanced visual output with emojis and color coding
-
 ### Web API (Node.js Implementation)
-**File**: `web/server.js`
+**File**: `server.js`
 
 **Endpoint**: `GET /api/smart-suggestions/:userId`
 
 **Key Improvements:**
 - Parallel computation of friend counts
-- Multi-factor scoring identical to CLI
+- Multi-factor scoring with weighted factors
 - Returns `distance`, `mutual_friends`, and `friend_count` for UI
 - Increased result limit to 12 suggestions
 - Better error handling

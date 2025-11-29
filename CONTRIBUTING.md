@@ -34,11 +34,6 @@ Thank you for your interest in contributing to FriendBook! This document provide
 ### Prerequisites
 
 ```bash
-# C Development
-gcc >= 9.0
-make >= 4.0
-sqlite3 >= 3.0
-
 # Node.js Development
 node >= 16.0
 npm >= 8.0
@@ -48,43 +43,15 @@ npm >= 8.0
 
 ```bash
 # Install dependencies
-make all
+npm install
 
-# Run CLI in development
-./build/friendbook
-
-# Run web server
-cd web && npm run dev
+# Run web server in development mode
+npm run dev
 ```
 
 ## 📝 Coding Standards
 
-### C Code (CLI)
-
-```c
-// Use descriptive variable names
-int userCount = 0;  // Good
-int uc = 0;         // Bad
-
-// Function naming: camelCase
-void getUserById(int id);
-
-// Constants: UPPER_CASE
-#define MAX_USERS 1000
-
-// Proper indentation (4 spaces)
-if (condition) {
-    // code
-}
-
-// Add comments for complex logic
-// Calculate mutual friends using BFS
-void findMutualFriends() {
-    // implementation
-}
-```
-
-### JavaScript Code (Web)
+### JavaScript Code
 
 ```javascript
 // Use ES6+ features
@@ -147,20 +114,6 @@ Implement automatic token refresh when token expires
 within 5 minutes of expiration.
 
 Closes #123
-
----
-
-fix(graph): correct memory leak in adjacency list
-
-Free allocated memory properly when removing edges
-from the graph structure.
-
----
-
-docs(readme): update installation instructions
-
-Add detailed steps for Windows users and common
-troubleshooting scenarios.
 ```
 
 ## 🔍 Pull Request Process
@@ -184,38 +137,7 @@ troubleshooting scenarios.
    [Docs] Improve API documentation
    ```
 
-3. **PR Description Template**
-
-   ```markdown
-   ## Description
-
-   Brief description of changes
-
-   ## Type of Change
-
-   - [ ] Bug fix
-   - [ ] New feature
-   - [ ] Documentation update
-   - [ ] Performance improvement
-
-   ## Testing
-
-   - [ ] Tested locally
-   - [ ] Added unit tests
-   - [ ] All tests passing
-
-   ## Screenshots (if applicable)
-
-   ## Checklist
-
-   - [ ] Code follows style guidelines
-   - [ ] Self-review completed
-   - [ ] Comments added for complex code
-   - [ ] Documentation updated
-   - [ ] No new warnings generated
-   ```
-
-4. **Review Process**
+3. **Review Process**
    - At least one approval required
    - All CI checks must pass
    - No merge conflicts
@@ -223,26 +145,11 @@ troubleshooting scenarios.
 
 ## 🧪 Testing Guidelines
 
-### CLI Testing
-
-```bash
-# Compile and run
-make clean && make cli
-./build/friendbook
-
-# Test key features:
-1. User registration
-2. Login
-3. Friend requests
-4. Friend suggestions
-5. Admin operations
-```
-
 ### Web Testing
 
 ```bash
 # Run development server
-cd web && npm run dev
+npm run dev
 
 # Manual testing checklist:
 - [ ] Registration flow
@@ -265,34 +172,6 @@ cd web && npm run dev
 - Screenshots (if applicable)
 - Error messages
 
-### Template
-
-```markdown
-**Environment**
-
-- OS: [e.g., macOS 12.0]
-- Version: [e.g., 1.0.0]
-- Interface: [CLI/Web]
-
-**Describe the Bug**
-Clear description
-
-**To Reproduce**
-
-1. Step 1
-2. Step 2
-3. ...
-
-**Expected Behavior**
-What should happen
-
-**Screenshots**
-If applicable
-
-**Additional Context**
-Any other relevant information
-```
-
 ## 💡 Feature Requests
 
 ### Template
@@ -306,17 +185,10 @@ What problem does this address?
 
 **Proposed Solution**
 How would you implement this?
-
-**Alternatives Considered**
-Other solutions you've thought about
-
-**Additional Context**
-Mockups, examples, etc.
 ```
 
 ## 📚 Resources
 
-- [C Style Guide](https://www.kernel.org/doc/html/v4.10/process/coding-style.html)
 - [JavaScript Style Guide](https://github.com/airbnb/javascript)
 - [Semantic Versioning](https://semver.org/)
 - [Keep a Changelog](https://keepachangelog.com/)
