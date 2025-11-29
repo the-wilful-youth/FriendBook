@@ -29,10 +29,15 @@ _Real-time Connections | Smart Friend Suggestions | Cloud-Ready_
 
 ## 🎯 Overview
 
-FriendBook is a comprehensive social networking platform built with Node.js and Express. It features a modern, responsive web interface and a powerful backend that handles user relationships, friend requests, and smart suggestions using advanced graph algorithms.
+FriendBook is a comprehensive social networking platform built entirely with **Node.js and Express**. It features a modern, responsive web interface and a powerful backend that handles user relationships, friend requests, and smart suggestions using advanced graph algorithms implemented in pure JavaScript.
+
+> **Looking for the C/CLI Version?**
+> The original C-based Command Line Interface version of FriendBook is preserved in the `legacy-cli` branch.
+> [**👉 View Legacy C/CLI Code**](https://github.com/the-wilful-youth/FriendBook/tree/legacy-cli)
 
 ### Key Highlights
 
+- **Pure JavaScript Architecture**: Easy to deploy, maintain, and scale
 - **Modern Web Interface**: Clean, responsive, and intuitive UI
 - **Smart Friend Suggestions**: Advanced algorithm based on mutual friends and network analysis
 - **Real-time Operations**: Instant friend requests and updates
